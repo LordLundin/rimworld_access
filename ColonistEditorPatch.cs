@@ -49,8 +49,38 @@ namespace RimWorldAccess
                     // For now, we'll let our navigation take precedence
                 }
 
+                // Handle text input when in text edit mode
+                if (Event.current.type == EventType.KeyDown && ColonistEditorNavigationState.IsInNameTextEditMode())
+                {
+                    KeyCode keyCode = Event.current.keyCode;
+
+                    if (keyCode == KeyCode.Return || keyCode == KeyCode.KeypadEnter)
+                    {
+                        ColonistEditorNavigationState.SaveTextEdit();
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.Escape)
+                    {
+                        ColonistEditorNavigationState.CancelTextEdit();
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.Backspace)
+                    {
+                        ColonistEditorNavigationState.HandleBackspace();
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (Event.current.character != '\0')
+                    {
+                        ColonistEditorNavigationState.HandleTextInput(Event.current.character);
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                }
                 // Handle keyboard input
-                if (Event.current.type == EventType.KeyDown)
+                else if (Event.current.type == EventType.KeyDown)
                 {
                     KeyCode keyCode = Event.current.keyCode;
 
@@ -97,6 +127,86 @@ namespace RimWorldAccess
                         // Help - show current mode
                         string help = ColonistEditorNavigationState.GetCurrentModeDescription();
                         ClipboardHelper.CopyToClipboard(help);
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.I)
+                    {
+                        // Info card
+                        ColonistEditorNavigationState.OpenInfoCard();
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.E)
+                    {
+                        // Edit name
+                        ColonistEditorNavigationState.EnterNameEditMode();
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.Space)
+                    {
+                        // Begin swap selection
+                        ColonistEditorNavigationState.BeginPawnSwap();
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.A)
+                    {
+                        // Add new pawn
+                        ColonistEditorNavigationState.AddNewPawn();
+                        UpdatePagePawnIndex(__instance);
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.Delete)
+                    {
+                        // Remove pawn
+                        ColonistEditorNavigationState.RemoveCurrentPawn();
+                        UpdatePagePawnIndex(__instance);
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.Return || keyCode == KeyCode.KeypadEnter)
+                    {
+                        // Check mode and handle accordingly
+                        if (ColonistEditorNavigationState.IsInSwapMode())
+                        {
+                            // Confirm swap
+                            ColonistEditorNavigationState.ConfirmPawnSwap();
+                        }
+                        else if (ColonistEditorNavigationState.IsInNameEditMode())
+                        {
+                            // In name edit mode, enter text edit or save
+                            ColonistEditorNavigationState.EnterTextEditMode();
+                        }
+                        else
+                        {
+                            // Begin game
+                            if (ColonistEditorNavigationState.BeginGame())
+                            {
+                                // Use reflection to call protected DoNext() method
+                                AccessTools.Method(typeof(Page_ConfigureStartingPawns), "DoNext").Invoke(__instance, null);
+                            }
+                        }
+                        Event.current.Use();
+                        patchActive = true;
+                    }
+                    else if (keyCode == KeyCode.Escape)
+                    {
+                        // Handle escape based on current mode
+                        if (ColonistEditorNavigationState.IsInInfoCardMode())
+                        {
+                            ColonistEditorNavigationState.CloseInfoCard();
+                        }
+                        else if (ColonistEditorNavigationState.IsInSwapMode())
+                        {
+                            ColonistEditorNavigationState.CancelPawnSwap();
+                        }
+                        else if (ColonistEditorNavigationState.IsInNameEditMode())
+                        {
+                            ColonistEditorNavigationState.CancelTextEdit();
+                        }
                         Event.current.Use();
                         patchActive = true;
                     }
@@ -148,6 +258,7 @@ namespace RimWorldAccess
             try
             {
                 int currentPawnIndex = ColonistEditorNavigationState.CurrentPawnIndex;
+                int startingPawnCount = Find.GameInitData.startingPawnCount;
 
                 // Calculate highlight position
                 // Pawn list is on the left, 140px wide
@@ -163,7 +274,7 @@ namespace RimWorldAccess
                 float yOffset = labelHeight + (currentPawnIndex * pawnEntryHeight);
 
                 // Account for "Starting Pawns Left Behind" label if applicable
-                if (currentPawnIndex >= Find.GameInitData.startingPawnCount)
+                if (currentPawnIndex >= startingPawnCount)
                 {
                     yOffset += labelHeight; // Extra label
                 }
@@ -175,9 +286,25 @@ namespace RimWorldAccess
                     56f
                 );
 
-                // Draw highlight border
-                Color highlightColor = new Color(0.3f, 0.7f, 1f, 0.5f);
+                // Draw highlight border - different colors for selected vs deselected
+                Color highlightColor;
+                if (currentPawnIndex < startingPawnCount)
+                {
+                    // Selected pawn - green highlight
+                    highlightColor = new Color(0.2f, 0.8f, 0.2f, 0.6f);
+                }
+                else
+                {
+                    // Deselected pawn - gray highlight
+                    highlightColor = new Color(0.6f, 0.6f, 0.6f, 0.5f);
+                }
+
                 Widgets.DrawBox(highlightRect, 2);
+
+                // Also draw a filled background with the color
+                Color bgColor = highlightColor;
+                bgColor.a = 0.2f;
+                Widgets.DrawBoxSolid(highlightRect, bgColor);
             }
             catch (System.Exception ex)
             {

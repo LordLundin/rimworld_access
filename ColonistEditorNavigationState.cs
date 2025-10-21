@@ -13,12 +13,24 @@ namespace RimWorldAccess
         private static NavigationMode currentMode = NavigationMode.PawnList;
         private static int currentSectionIndex = 0;
         private static int currentDetailIndex = 0;
+        private static int currentNameField = 0; // 0=First, 1=Nick, 2=Last, 3=Save Changes
+        private static string editingFirstName = "";
+        private static string editingNickName = "";
+        private static string editingLastName = "";
+        private static NavigationMode previousMode = NavigationMode.PawnList; // Store mode before info card
+        private static string currentTextInput = ""; // For text editing mode
+        private static int swapSourceIndex = -1; // Index of pawn to swap
+        private static int swapTargetIndex = 0; // Index being navigated for swap target
 
         private enum NavigationMode
         {
             PawnList,      // Navigating between pawns
             SectionList,   // Navigating between sections (Skills, Health, Relations, etc.)
-            DetailView     // Viewing details within a section
+            DetailView,    // Viewing details within a section
+            NameEditMenu,  // Menu to select which name field to edit
+            NameTextEdit,  // Actually typing in a name field
+            InfoCard,      // Viewing info card
+            SwapSelect     // Selecting which pawn to swap with
         }
 
         private enum Section
@@ -60,9 +72,20 @@ namespace RimWorldAccess
             currentMode = NavigationMode.PawnList;
             currentSectionIndex = 0;
             currentDetailIndex = 0;
+            currentNameField = 0;
+            editingFirstName = "";
+            editingNickName = "";
+            editingLastName = "";
+            previousMode = NavigationMode.PawnList;
+            swapSourceIndex = -1;
+            swapTargetIndex = 0;
         }
 
         public static int CurrentPawnIndex => currentPawnIndex;
+        public static bool IsInNameEditMode() => currentMode == NavigationMode.NameEditMenu || currentMode == NavigationMode.NameTextEdit;
+        public static bool IsInNameTextEditMode() => currentMode == NavigationMode.NameTextEdit;
+        public static bool IsInInfoCardMode() => currentMode == NavigationMode.InfoCard;
+        public static bool IsInSwapMode() => currentMode == NavigationMode.SwapSelect;
 
         public static void NavigateUp()
         {
@@ -76,6 +99,12 @@ namespace RimWorldAccess
                     break;
                 case NavigationMode.DetailView:
                     NavigateDetailUp();
+                    break;
+                case NavigationMode.NameEditMenu:
+                    NavigateNameFields(true);
+                    break;
+                case NavigationMode.SwapSelect:
+                    NavigateSwapTargetUp();
                     break;
             }
         }
@@ -92,6 +121,12 @@ namespace RimWorldAccess
                     break;
                 case NavigationMode.DetailView:
                     NavigateDetailDown();
+                    break;
+                case NavigationMode.NameEditMenu:
+                    NavigateNameFields(false);
+                    break;
+                case NavigationMode.SwapSelect:
+                    NavigateSwapTargetDown();
                     break;
             }
         }
@@ -121,7 +156,24 @@ namespace RimWorldAccess
         public static void DrillOut()
         {
             // Left arrow - go back
-            if (currentMode == NavigationMode.DetailView)
+            if (currentMode == NavigationMode.InfoCard)
+            {
+                // Return from info card to previous mode
+                currentMode = previousMode;
+                if (currentMode == NavigationMode.DetailView)
+                {
+                    CopyDetailToClipboard();
+                }
+                else if (currentMode == NavigationMode.SectionList)
+                {
+                    CopySectionToClipboard();
+                }
+                else
+                {
+                    CopyPawnToClipboard();
+                }
+            }
+            else if (currentMode == NavigationMode.DetailView)
             {
                 currentMode = NavigationMode.SectionList;
                 CopySectionToClipboard();
@@ -129,6 +181,26 @@ namespace RimWorldAccess
             else if (currentMode == NavigationMode.SectionList)
             {
                 currentMode = NavigationMode.PawnList;
+                CopyPawnToClipboard();
+            }
+        }
+
+        public static void CloseInfoCard()
+        {
+            if (currentMode != NavigationMode.InfoCard) return;
+
+            // Return to previous mode
+            currentMode = previousMode;
+            if (currentMode == NavigationMode.DetailView)
+            {
+                CopyDetailToClipboard();
+            }
+            else if (currentMode == NavigationMode.SectionList)
+            {
+                CopySectionToClipboard();
+            }
+            else
+            {
                 CopyPawnToClipboard();
             }
         }
@@ -215,13 +287,15 @@ namespace RimWorldAccess
             if (currentPawnIndex < 0 || currentPawnIndex >= pawns.Count) return;
 
             Pawn pawn = pawns[currentPawnIndex];
-            string status = currentPawnIndex < Find.GameInitData.startingPawnCount ? "Starting" : "Left Behind";
+            bool isSelected = currentPawnIndex < Find.GameInitData.startingPawnCount;
+            string status = isSelected ? "Starting" : "Left Behind";
+            string selectedPrefix = isSelected ? "Selected " : "";
 
             string name = pawn.Name is NameTriple triple
                 ? $"{triple.First} '{triple.Nick}' {triple.Last}"
                 : pawn.LabelShort;
 
-            string text = $"[Pawn {currentPawnIndex + 1}/{pawns.Count}] {name} - {pawn.story.TitleCap} ({status}) - Age {pawn.ageTracker.AgeBiologicalYears}";
+            string text = $"[Pawn {currentPawnIndex + 1}/{pawns.Count}] {selectedPrefix}{name} - {pawn.story.TitleCap} ({status}) - Age {pawn.ageTracker.AgeBiologicalYears}";
 
             ClipboardHelper.CopyToClipboard(text);
         }
@@ -395,13 +469,567 @@ namespace RimWorldAccess
             switch (currentMode)
             {
                 case NavigationMode.PawnList:
-                    return "Pawn List Mode - Use Up/Down to navigate pawns, Tab to enter sections, R to randomize";
+                    return "Pawn List Mode - Up/Down:navigate | Tab:sections | R:randomize | E:edit name | Space:swap | A:add | Del:remove | Enter:begin";
                 case NavigationMode.SectionList:
-                    return "Section Mode - Use Up/Down to navigate sections, Right to drill in, Left to go back";
+                    return "Section Mode - Up/Down:navigate | Right:drill in | Left:back | I:info card";
                 case NavigationMode.DetailView:
-                    return "Detail Mode - Use Up/Down to navigate items, Left to go back";
+                    return "Detail Mode - Up/Down:navigate | Left:back | I:info card";
+                case NavigationMode.NameEditMenu:
+                    string[] menuItems = { "First Name", "Nickname", "Last Name", "Save Changes" };
+                    return $"Name Edit Mode - Selected: {menuItems[currentNameField]} | Up/Down:navigate | Enter:select | Esc:cancel";
+                case NavigationMode.NameTextEdit:
+                    string[] fieldNames = { "First Name", "Nickname", "Last Name" };
+                    return $"Text Edit Mode - Editing: {fieldNames[currentNameField]} | Type to edit | Enter:save | Esc:cancel";
+                case NavigationMode.InfoCard:
+                    return "Info Card Mode - Press Escape to close and return";
+                case NavigationMode.SwapSelect:
+                    return "Swap Selection Mode - Up/Down:navigate | Enter:confirm swap | Esc:cancel";
                 default:
                     return "Unknown mode";
+            }
+        }
+
+        // Name editing functionality
+        public static void EnterNameEditMode()
+        {
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            if (currentPawnIndex < 0 || currentPawnIndex >= pawns.Count) return;
+
+            Pawn pawn = pawns[currentPawnIndex];
+            if (pawn.Name is NameTriple triple)
+            {
+                editingFirstName = triple.First;
+                editingNickName = triple.Nick;
+                editingLastName = triple.Last;
+            }
+            else
+            {
+                editingFirstName = pawn.LabelShort;
+                editingNickName = pawn.LabelShort;
+                editingLastName = "";
+            }
+
+            currentMode = NavigationMode.NameEditMenu;
+            currentNameField = 0;
+            CopyNameMenuToClipboard();
+        }
+
+        public static void NavigateNameFields(bool up)
+        {
+            if (currentMode != NavigationMode.NameEditMenu) return;
+
+            if (up)
+            {
+                currentNameField--;
+                if (currentNameField < 0) currentNameField = 3; // 0-3 for First, Nick, Last, Save
+            }
+            else
+            {
+                currentNameField++;
+                if (currentNameField > 3) currentNameField = 0;
+            }
+
+            CopyNameMenuToClipboard();
+        }
+
+        // Enter text edit mode for a specific field
+        public static void EnterTextEditMode()
+        {
+            if (currentMode != NavigationMode.NameEditMenu) return;
+
+            // If on "Save Changes", just save
+            if (currentNameField == 3)
+            {
+                SaveNameEdit();
+                return;
+            }
+
+            // Otherwise, enter text edit mode for the selected field
+            currentMode = NavigationMode.NameTextEdit;
+
+            // Load the current value into the text input
+            switch (currentNameField)
+            {
+                case 0: currentTextInput = editingFirstName; break;
+                case 1: currentTextInput = editingNickName; break;
+                case 2: currentTextInput = editingLastName; break;
+            }
+
+            CopyTextEditPromptToClipboard();
+        }
+
+        // Handle text input
+        public static void HandleTextInput(char character)
+        {
+            if (currentMode != NavigationMode.NameTextEdit) return;
+
+            // Allow alphanumeric, spaces, hyphens, apostrophes
+            if (char.IsLetterOrDigit(character) || character == ' ' || character == '-' || character == '\'')
+            {
+                currentTextInput += character;
+                CopyTextEditPromptToClipboard();
+            }
+        }
+
+        // Handle backspace in text edit mode
+        public static void HandleBackspace()
+        {
+            if (currentMode != NavigationMode.NameTextEdit) return;
+
+            if (currentTextInput.Length > 0)
+            {
+                currentTextInput = currentTextInput.Substring(0, currentTextInput.Length - 1);
+                CopyTextEditPromptToClipboard();
+            }
+        }
+
+        // Save the current text input
+        public static void SaveTextEdit()
+        {
+            if (currentMode != NavigationMode.NameTextEdit) return;
+
+            // Save the text to the appropriate field
+            switch (currentNameField)
+            {
+                case 0: editingFirstName = currentTextInput; break;
+                case 1: editingNickName = currentTextInput; break;
+                case 2: editingLastName = currentTextInput; break;
+            }
+
+            // Return to name menu
+            currentMode = NavigationMode.NameEditMenu;
+            currentTextInput = "";
+            CopyNameMenuToClipboard();
+        }
+
+        // Cancel text edit
+        public static void CancelTextEdit()
+        {
+            if (currentMode != NavigationMode.NameTextEdit)
+            {
+                // If in name menu, go back to pawn list
+                if (currentMode == NavigationMode.NameEditMenu)
+                {
+                    CancelNameEdit();
+                }
+                return;
+            }
+
+            currentMode = NavigationMode.NameEditMenu;
+            currentTextInput = "";
+            CopyNameMenuToClipboard();
+        }
+
+        public static void SaveNameEdit()
+        {
+            if (currentMode != NavigationMode.NameEditMenu && currentMode != NavigationMode.NameTextEdit) return;
+
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            if (currentPawnIndex < 0 || currentPawnIndex >= pawns.Count) return;
+
+            Pawn pawn = pawns[currentPawnIndex];
+
+            // Validate names (basic check)
+            if (string.IsNullOrWhiteSpace(editingFirstName)) editingFirstName = "Unknown";
+            if (string.IsNullOrWhiteSpace(editingLastName)) editingLastName = "Unknown";
+            if (string.IsNullOrWhiteSpace(editingNickName)) editingNickName = editingFirstName;
+
+            pawn.Name = new NameTriple(editingFirstName, editingNickName, editingLastName);
+
+            currentMode = NavigationMode.PawnList;
+            ClipboardHelper.CopyToClipboard($"Name saved: {pawn.Name}");
+        }
+
+        public static void CancelNameEdit()
+        {
+            if (currentMode != NavigationMode.NameEditMenu) return;
+
+            currentMode = NavigationMode.PawnList;
+            ClipboardHelper.CopyToClipboard("Name edit cancelled");
+        }
+
+        private static void CopyNameMenuToClipboard()
+        {
+            string[] menuItems = {
+                $"First Name: {editingFirstName}",
+                $"Nickname: {editingNickName}",
+                $"Last Name: {editingLastName}",
+                "Save Changes"
+            };
+
+            ClipboardHelper.CopyToClipboard($"[Name Editor] {menuItems[currentNameField]} - Press Enter to edit, Escape to cancel");
+        }
+
+        private static void CopyTextEditPromptToClipboard()
+        {
+            string[] fieldNames = { "First Name", "Nickname", "Last Name" };
+            ClipboardHelper.CopyToClipboard($"[Editing {fieldNames[currentNameField]}] {currentTextInput}_ (Type to edit, Enter to save, Escape to cancel)");
+        }
+
+        // Info card functionality
+        public static void OpenInfoCard()
+        {
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            if (currentPawnIndex < 0 || currentPawnIndex >= pawns.Count) return;
+
+            Pawn pawn = pawns[currentPawnIndex];
+
+            try
+            {
+                StringBuilder infoText = new StringBuilder();
+
+                if (currentMode == NavigationMode.DetailView)
+                {
+                    Section section = availableSections[currentSectionIndex];
+
+                    switch (section)
+                    {
+                        case Section.Biography:
+                            // Get full biography info
+                            infoText.AppendLine($"=== {pawn.Name} ===");
+                            infoText.AppendLine($"Gender: {pawn.gender}");
+                            infoText.AppendLine($"Age: {pawn.ageTracker.AgeBiologicalYears} years");
+                            infoText.AppendLine($"Title: {pawn.story.TitleCap}");
+                            infoText.AppendLine();
+                            if (pawn.story.Childhood != null)
+                            {
+                                infoText.AppendLine($"Childhood: {pawn.story.Childhood.title}");
+                                infoText.AppendLine(pawn.story.Childhood.FullDescriptionFor(pawn));
+                                infoText.AppendLine();
+                            }
+                            if (pawn.story.Adulthood != null)
+                            {
+                                infoText.AppendLine($"Adulthood: {pawn.story.Adulthood.title}");
+                                infoText.AppendLine(pawn.story.Adulthood.FullDescriptionFor(pawn));
+                            }
+                            break;
+
+                        case Section.Traits:
+                            if (pawn.story?.traits?.allTraits != null && currentDetailIndex < pawn.story.traits.allTraits.Count)
+                            {
+                                Trait trait = pawn.story.traits.allTraits[currentDetailIndex];
+                                infoText.AppendLine($"=== {trait.LabelCap} ===");
+                                infoText.AppendLine(trait.TipString(pawn));
+                            }
+                            break;
+
+                        case Section.Skills:
+                            if (pawn.skills?.skills != null && currentDetailIndex < pawn.skills.skills.Count)
+                            {
+                                SkillRecord skill = pawn.skills.skills[currentDetailIndex];
+                                infoText.AppendLine($"=== {skill.def.skillLabel} ===");
+                                infoText.AppendLine($"Level: {skill.Level}");
+                                infoText.AppendLine($"Passion: {skill.passion}");
+                                if (skill.TotallyDisabled)
+                                {
+                                    infoText.AppendLine("Status: DISABLED");
+                                }
+                                infoText.AppendLine();
+                                infoText.AppendLine(skill.def.description);
+                            }
+                            break;
+
+                        case Section.Health:
+                            if (pawn.health?.hediffSet?.hediffs != null && currentDetailIndex < pawn.health.hediffSet.hediffs.Count)
+                            {
+                                Hediff hediff = pawn.health.hediffSet.hediffs[currentDetailIndex];
+                                infoText.AppendLine($"=== {hediff.LabelCap} ===");
+                                if (hediff.Part != null)
+                                {
+                                    infoText.AppendLine($"Part: {hediff.Part.Label}");
+                                }
+                                infoText.AppendLine($"Severity: {hediff.SeverityLabel}");
+                                infoText.AppendLine();
+                                infoText.AppendLine(hediff.Description);
+                            }
+                            break;
+
+                        case Section.Gear:
+                            if (pawn.equipment?.AllEquipmentListForReading != null && currentDetailIndex < pawn.equipment.AllEquipmentListForReading.Count)
+                            {
+                                ThingWithComps equipment = pawn.equipment.AllEquipmentListForReading[currentDetailIndex];
+                                infoText.AppendLine($"=== {equipment.LabelCap} ===");
+                                infoText.AppendLine(equipment.DescriptionDetailed);
+                            }
+                            break;
+
+                        case Section.Relations:
+                            if (pawn.relations?.DirectRelations != null && currentDetailIndex < pawn.relations.DirectRelations.Count)
+                            {
+                                DirectPawnRelation relation = pawn.relations.DirectRelations[currentDetailIndex];
+                                int opinion = pawn.relations.OpinionOf(relation.otherPawn);
+                                infoText.AppendLine($"=== {relation.otherPawn.LabelShort} ===");
+                                infoText.AppendLine($"Relation: {relation.def.label}");
+                                infoText.AppendLine($"Opinion: {opinion:+#;-#;0}");
+                                infoText.AppendLine();
+                                infoText.AppendLine(relation.def.description);
+                            }
+                            break;
+
+                        default:
+                            infoText.AppendLine($"=== {pawn.Name} ===");
+                            infoText.AppendLine("No detailed info available");
+                            break;
+                    }
+                }
+                else
+                {
+                    // Default: pawn summary
+                    infoText.AppendLine($"=== {pawn.Name} ===");
+                    infoText.AppendLine($"Title: {pawn.story.TitleCap}");
+                    infoText.AppendLine($"Age: {pawn.ageTracker.AgeBiologicalYears}");
+                }
+
+                infoText.AppendLine();
+                infoText.AppendLine("[Press Escape to close info card and return]");
+
+                // Store current mode and switch to InfoCard mode
+                previousMode = currentMode;
+                currentMode = NavigationMode.InfoCard;
+
+                ClipboardHelper.CopyToClipboard(infoText.ToString());
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error($"[RimWorld Access] Error getting info card: {ex}");
+                ClipboardHelper.CopyToClipboard("Error getting info card");
+            }
+        }
+
+        // Selection management
+        // Note: This enters swap mode to let user select which pawn to swap with
+        // The startingPawnCount never changes - it's set by the scenario
+        public static void BeginPawnSwap()
+        {
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            if (currentPawnIndex < 0 || currentPawnIndex >= pawns.Count) return;
+
+            int startingCount = Find.GameInitData.startingPawnCount;
+
+            // Can't swap if there are no pawns on the other side
+            if (startingCount <= 0 || startingCount >= pawns.Count)
+            {
+                ClipboardHelper.CopyToClipboard("Cannot swap - no pawns on the other side of the boundary");
+                return;
+            }
+
+            // Store the source pawn
+            swapSourceIndex = currentPawnIndex;
+
+            // Initialize target to the first eligible pawn on the other side
+            if (currentPawnIndex < startingCount)
+            {
+                // Currently in starting roster, can swap with optional pawns
+                swapTargetIndex = startingCount;
+            }
+            else
+            {
+                // Currently in optional roster, can swap with starting pawns
+                swapTargetIndex = 0;
+            }
+
+            // Enter swap mode
+            currentMode = NavigationMode.SwapSelect;
+
+            // Announce the swap prompt
+            CopySwapTargetToClipboard();
+        }
+
+        private static void NavigateSwapTargetUp()
+        {
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            int startingCount = Find.GameInitData.startingPawnCount;
+
+            // Determine valid range based on source pawn location
+            int minIndex, maxIndex;
+            if (swapSourceIndex < startingCount)
+            {
+                // Source is in starting, navigate optional pawns
+                minIndex = startingCount;
+                maxIndex = pawns.Count - 1;
+            }
+            else
+            {
+                // Source is in optional, navigate starting pawns
+                minIndex = 0;
+                maxIndex = startingCount - 1;
+            }
+
+            swapTargetIndex--;
+            if (swapTargetIndex < minIndex)
+                swapTargetIndex = maxIndex;
+
+            CopySwapTargetToClipboard();
+        }
+
+        private static void NavigateSwapTargetDown()
+        {
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            int startingCount = Find.GameInitData.startingPawnCount;
+
+            // Determine valid range based on source pawn location
+            int minIndex, maxIndex;
+            if (swapSourceIndex < startingCount)
+            {
+                // Source is in starting, navigate optional pawns
+                minIndex = startingCount;
+                maxIndex = pawns.Count - 1;
+            }
+            else
+            {
+                // Source is in optional, navigate starting pawns
+                minIndex = 0;
+                maxIndex = startingCount - 1;
+            }
+
+            swapTargetIndex++;
+            if (swapTargetIndex > maxIndex)
+                swapTargetIndex = minIndex;
+
+            CopySwapTargetToClipboard();
+        }
+
+        private static void CopySwapTargetToClipboard()
+        {
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            if (swapSourceIndex < 0 || swapSourceIndex >= pawns.Count) return;
+            if (swapTargetIndex < 0 || swapTargetIndex >= pawns.Count) return;
+
+            Pawn sourcePawn = pawns[swapSourceIndex];
+            Pawn targetPawn = pawns[swapTargetIndex];
+
+            string sourceName = sourcePawn.Name is NameTriple tripleSource
+                ? $"{tripleSource.First} '{tripleSource.Nick}' {tripleSource.Last}"
+                : sourcePawn.LabelShort;
+
+            string targetName = targetPawn.Name is NameTriple tripleTarget
+                ? $"{tripleTarget.First} '{tripleTarget.Nick}' {tripleTarget.Last}"
+                : targetPawn.LabelShort;
+
+            ClipboardHelper.CopyToClipboard($"Swap {sourceName} with: {targetName} - {targetPawn.story.TitleCap} (Age {targetPawn.ageTracker.AgeBiologicalYears})");
+        }
+
+        public static void ConfirmPawnSwap()
+        {
+            if (currentMode != NavigationMode.SwapSelect) return;
+
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            if (swapSourceIndex < 0 || swapSourceIndex >= pawns.Count) return;
+            if (swapTargetIndex < 0 || swapTargetIndex >= pawns.Count) return;
+
+            // Perform the swap
+            Pawn sourcePawn = pawns[swapSourceIndex];
+            Pawn targetPawn = pawns[swapTargetIndex];
+
+            pawns[swapSourceIndex] = targetPawn;
+            pawns[swapTargetIndex] = sourcePawn;
+
+            // Return to pawn list mode, follow the swapped pawn
+            currentMode = NavigationMode.PawnList;
+            currentPawnIndex = swapTargetIndex;
+
+            ClipboardHelper.CopyToClipboard($"Swapped {sourcePawn.Name} with {targetPawn.Name}");
+            CopyPawnToClipboard();
+        }
+
+        public static void CancelPawnSwap()
+        {
+            if (currentMode != NavigationMode.SwapSelect) return;
+
+            currentMode = NavigationMode.PawnList;
+            ClipboardHelper.CopyToClipboard("Swap cancelled");
+            CopyPawnToClipboard();
+        }
+
+        // Add new pawn
+        public static void AddNewPawn()
+        {
+            try
+            {
+                StartingPawnUtility.AddNewPawn();
+                List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+                currentPawnIndex = pawns.Count - 1; // Navigate to the new pawn
+                ClipboardHelper.CopyToClipboard($"Added new pawn. Total pawns: {pawns.Count}");
+                CopyPawnToClipboard();
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error($"[RimWorld Access] Error adding new pawn: {ex}");
+                ClipboardHelper.CopyToClipboard("Error adding new pawn");
+            }
+        }
+
+        // Remove current pawn
+        public static void RemoveCurrentPawn()
+        {
+            List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+            if (currentPawnIndex < 0 || currentPawnIndex >= pawns.Count) return;
+            if (pawns.Count <= 1)
+            {
+                ClipboardHelper.CopyToClipboard("Cannot remove last pawn");
+                return;
+            }
+
+            try
+            {
+                Pawn pawn = pawns[currentPawnIndex];
+                pawns.RemoveAt(currentPawnIndex);
+
+                // Adjust starting count if needed
+                if (currentPawnIndex < Find.GameInitData.startingPawnCount)
+                {
+                    Find.GameInitData.startingPawnCount--;
+                }
+
+                // Adjust current index
+                if (currentPawnIndex >= pawns.Count)
+                {
+                    currentPawnIndex = pawns.Count - 1;
+                }
+
+                ClipboardHelper.CopyToClipboard($"Removed pawn. Remaining: {pawns.Count}");
+                CopyPawnToClipboard();
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error($"[RimWorld Access] Error removing pawn: {ex}");
+                ClipboardHelper.CopyToClipboard("Error removing pawn");
+            }
+        }
+
+        // Begin game
+        public static bool BeginGame()
+        {
+            try
+            {
+                // Validate we have at least one starting pawn
+                if (Find.GameInitData.startingPawnCount <= 0)
+                {
+                    ClipboardHelper.CopyToClipboard("Error: No starting pawns selected. Use Space to select pawns.");
+                    return false;
+                }
+
+                // Validate all pawns have names
+                List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+                for (int i = 0; i < Find.GameInitData.startingPawnCount; i++)
+                {
+                    if (i >= pawns.Count) continue;
+                    Pawn pawn = pawns[i];
+                    if (pawn.Name == null || string.IsNullOrEmpty(pawn.Name.ToString()))
+                    {
+                        ClipboardHelper.CopyToClipboard($"Error: Pawn {i + 1} has no name");
+                        return false;
+                    }
+                }
+
+                ClipboardHelper.CopyToClipboard("Beginning game...");
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error($"[RimWorld Access] Error beginning game: {ex}");
+                ClipboardHelper.CopyToClipboard("Error beginning game");
+                return false;
             }
         }
     }
