@@ -115,6 +115,15 @@ namespace RimWorldAccess
                 }
             }
 
+            // Add zone information if present
+            Zone zone = position.GetZone(map);
+            if (zone != null)
+            {
+                if (addedSomething) sb.Append(", ");
+                sb.Append($"in {zone.label}");
+                addedSomething = true;
+            }
+
             // Add coordinates
             if (addedSomething)
                 sb.Append($", at {position.x}, {position.z}");
