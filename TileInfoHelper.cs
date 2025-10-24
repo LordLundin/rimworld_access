@@ -81,7 +81,14 @@ namespace RimWorldAccess
                 if (addedSomething) sb.Append(", ");
                 if (items.Count == 1)
                 {
-                    sb.Append(items[0].LabelShort);
+                    string itemLabel = items[0].LabelShort;
+                    // Check if item is forbidden
+                    CompForbiddable forbiddable = items[0].TryGetComp<CompForbiddable>();
+                    if (forbiddable != null && forbiddable.Forbidden)
+                    {
+                        itemLabel = "Forbidden " + itemLabel;
+                    }
+                    sb.Append(itemLabel);
                 }
                 else
                 {
@@ -177,6 +184,14 @@ namespace RimWorldAccess
                         string label = item.LabelShortCap;
                         if (item.stackCount > 1)
                             label += $" x{item.stackCount}";
+
+                        // Check if item is forbidden
+                        CompForbiddable forbiddable = item.TryGetComp<CompForbiddable>();
+                        if (forbiddable != null && forbiddable.Forbidden)
+                        {
+                            label = "Forbidden " + label;
+                        }
+
                         sb.AppendLine($"  - {label}");
                     }
                     if (items.Count > 20)

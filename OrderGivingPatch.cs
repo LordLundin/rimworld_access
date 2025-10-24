@@ -63,6 +63,10 @@ namespace RimWorldAccess
                 return;
             }
 
+
+            // Don't process if in zone creation mode
+            if (ZoneCreationState.IsInCreationMode)
+                return;
             // Only process Enter key for opening menu
             if (key != KeyCode.Return && key != KeyCode.KeypadEnter)
                 return;
