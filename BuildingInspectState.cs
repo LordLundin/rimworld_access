@@ -51,8 +51,6 @@ namespace RimWorldAccess
                 announcement += $" - Tab: {availableTabs[selectedTabIndex].labelKey.Translate()}";
             }
             ClipboardHelper.CopyToClipboard(announcement);
-
-            MelonLoader.MelonLogger.Msg($"Opened building inspect for {building.LabelCap} with {availableTabs.Count} tabs");
         }
 
         /// <summary>
@@ -96,52 +94,34 @@ namespace RimWorldAccess
         public static void OpenCurrentTab()
         {
             if (availableTabs == null || selectedTabIndex >= availableTabs.Count)
-            {
-                MelonLoader.MelonLogger.Msg("OpenCurrentTab: No tabs available");
                 return;
-            }
 
             InspectTabBase currentTab = availableTabs[selectedTabIndex];
-            MelonLoader.MelonLogger.Msg($"OpenCurrentTab: Current tab type = {currentTab.GetType().Name}");
 
             // Check if this is a bills tab
             if (currentTab is ITab_Bills billsTab)
             {
-                MelonLoader.MelonLogger.Msg("OpenCurrentTab: Detected ITab_Bills");
                 // Get the building's bill stack
                 if (selectedBuilding is IBillGiver billGiver)
                 {
-                    MelonLoader.MelonLogger.Msg($"OpenCurrentTab: selectedBuilding is IBillGiver, position = {selectedBuilding.Position}");
                     // Save position before closing
                     IntVec3 pos = selectedBuilding.Position;
                     // Close the building inspect state before opening bills menu
                     Close();
-                    MelonLoader.MelonLogger.Msg("OpenCurrentTab: Closed BuildingInspectState, now opening BillsMenuState");
                     BillsMenuState.Open(billGiver, pos);
-                    MelonLoader.MelonLogger.Msg($"OpenCurrentTab: BillsMenuState.IsActive = {BillsMenuState.IsActive}");
                     return;
                 }
-                else
-                {
-                    MelonLoader.MelonLogger.Msg($"OpenCurrentTab: selectedBuilding is NOT IBillGiver, type = {selectedBuilding?.GetType().Name}");
-                }
-            }
-            else
-            {
-                MelonLoader.MelonLogger.Msg($"OpenCurrentTab: Current tab is NOT ITab_Bills");
             }
 
             // Check if this is a storage tab
             if (currentTab.GetType().Name == "ITab_Storage")
             {
-                MelonLoader.MelonLogger.Msg("OpenCurrentTab: Detected ITab_Storage");
                 // Get the storage settings
                 if (selectedBuilding is IStoreSettingsParent storageParent)
                 {
                     StorageSettings settings = storageParent.GetStoreSettings();
                     if (settings != null)
                     {
-                        // Save the settings before closing
                         // Close the building inspect state before opening storage menu
                         Close();
                         StorageSettingsMenuState.Open(settings);

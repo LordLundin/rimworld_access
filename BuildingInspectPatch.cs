@@ -21,20 +21,16 @@ namespace RimWorldAccess
             if (Event.current.type != EventType.KeyDown)
                 return;
 
-            KeyCode key = Event.current.keyCode;
-
             // Handle WindowlessFloatMenuState (highest priority - used for recipe selection and other submenus)
             if (WindowlessFloatMenuState.IsActive)
             {
                 // This is handled in UnifiedKeyboardPatch, so just return
-                MelonLoader.MelonLogger.Msg($"BuildingInspectPatch: WindowlessFloatMenuState is active, key = {key}");
                 return;
             }
 
             // Handle ThingFilterMenuState (second highest priority - it's a submenu)
             if (ThingFilterMenuState.IsActive)
             {
-                MelonLoader.MelonLogger.Msg($"BuildingInspectPatch: ThingFilterMenuState is active, key = {key}");
                 HandleThingFilterInput();
                 return;
             }
@@ -42,7 +38,6 @@ namespace RimWorldAccess
             // Handle BillConfigState (third priority)
             if (BillConfigState.IsActive)
             {
-                MelonLoader.MelonLogger.Msg($"BuildingInspectPatch: BillConfigState is active, key = {key}");
                 HandleBillConfigInput();
                 return;
             }
@@ -50,7 +45,6 @@ namespace RimWorldAccess
             // Handle BillsMenuState (fourth priority)
             if (BillsMenuState.IsActive)
             {
-                MelonLoader.MelonLogger.Msg($"BuildingInspectPatch: BillsMenuState is active, key = {key}");
                 HandleBillsMenuInput();
                 return;
             }
@@ -58,7 +52,6 @@ namespace RimWorldAccess
             // Handle BuildingInspectState (lowest priority)
             if (BuildingInspectState.IsActive)
             {
-                MelonLoader.MelonLogger.Msg($"BuildingInspectPatch: BuildingInspectState is active, key = {key}");
                 HandleBuildingInspectInput();
                 return;
             }
@@ -97,31 +90,26 @@ namespace RimWorldAccess
         private static void HandleBillsMenuInput()
         {
             KeyCode key = Event.current.keyCode;
-            MelonLoader.MelonLogger.Msg($"HandleBillsMenuInput: key = {key}");
 
             switch (key)
             {
                 case KeyCode.UpArrow:
-                    MelonLoader.MelonLogger.Msg("HandleBillsMenuInput: UpArrow pressed");
                     BillsMenuState.SelectPrevious();
                     Event.current.Use();
                     break;
 
                 case KeyCode.DownArrow:
-                    MelonLoader.MelonLogger.Msg("HandleBillsMenuInput: DownArrow pressed");
                     BillsMenuState.SelectNext();
                     Event.current.Use();
                     break;
 
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
-                    MelonLoader.MelonLogger.Msg("HandleBillsMenuInput: Enter pressed");
                     BillsMenuState.ExecuteSelected();
                     Event.current.Use();
                     break;
 
                 case KeyCode.Delete:
-                    MelonLoader.MelonLogger.Msg("HandleBillsMenuInput: Delete pressed");
                     BillsMenuState.DeleteSelected();
                     Event.current.Use();
                     break;
@@ -129,14 +117,12 @@ namespace RimWorldAccess
                 case KeyCode.C:
                     if (Event.current.control)
                     {
-                        MelonLoader.MelonLogger.Msg("HandleBillsMenuInput: Ctrl+C pressed");
                         BillsMenuState.CopySelected();
                         Event.current.Use();
                     }
                     break;
 
                 case KeyCode.Escape:
-                    MelonLoader.MelonLogger.Msg("HandleBillsMenuInput: Escape pressed");
                     BillsMenuState.Close();
                     ClipboardHelper.CopyToClipboard("Closed bills menu");
                     Event.current.Use();

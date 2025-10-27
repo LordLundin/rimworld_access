@@ -126,6 +126,20 @@ namespace RimWorldAccess
                     Bill bill = billGiver.BillStack[i];
                     string billLabel = $"{i + 1}. {bill.LabelCap}";
 
+                    // Add cost information
+                    string costInfo = GetBillCostInfo(bill);
+                    if (!string.IsNullOrEmpty(costInfo))
+                    {
+                        billLabel += $" - {costInfo}";
+                    }
+
+                    // Add description
+                    string description = GetBillDescription(bill);
+                    if (!string.IsNullOrEmpty(description))
+                    {
+                        billLabel += $" - {description}";
+                    }
+
                     if (bill.suspended)
                     {
                         billLabel += " (paused)";
@@ -302,6 +316,20 @@ namespace RimWorldAccess
         {
             string label = (precept != null) ? "RecipeMake".Translate(precept.LabelCap).CapitalizeFirst() : recipe.LabelCap;
 
+            // Add cost information
+            string costInfo = GetRecipeCostInfo(recipe);
+            if (!string.IsNullOrEmpty(costInfo))
+            {
+                label += $" - {costInfo}";
+            }
+
+            // Add description
+            string description = GetRecipeDescription(recipe);
+            if (!string.IsNullOrEmpty(description))
+            {
+                label += $" - {description}";
+            }
+
             FloatMenuOption option = new FloatMenuOption(label, delegate
             {
                 // Check requirements
@@ -408,6 +436,176 @@ namespace RimWorldAccess
 
                 ClipboardHelper.CopyToClipboard(announcement);
             }
+        }
+
+        /// <summary>
+        /// Gets cost information for a recipe (ingredients required).
+        /// </summary>
+        private static string GetRecipeCostInfo(RecipeDef recipe)
+        {
+            if (recipe == null)
+                return "";
+
+            List<string> costs = new List<string>();
+
+            // Get ingredient costs
+            if (recipe.ingredients != null && recipe.ingredients.Count > 0)
+            {
+                foreach (IngredientCount ingredient in recipe.ingredients)
+                {
+                    string ingredientName = ingredient.filter.Summary;
+                    float amount = ingredient.GetBaseCount();
+                    costs.Add($"{amount} {ingredientName}");
+                }
+            }
+
+            // Get fixed ingredient costs
+            if (recipe.fixedIngredientFilter != null && recipe.fixedIngredientFilter.AllowedThingDefs.Any())
+            {
+                // Only show if not already covered by ingredients list
+                if (recipe.ingredients == null || recipe.ingredients.Count == 0)
+                {
+                    costs.Add(recipe.fixedIngredientFilter.Summary);
+                }
+            }
+
+            if (costs.Count == 0)
+                return "";
+
+            return string.Join(", ", costs);
+        }
+
+        /// <summary>
+        /// Gets description for a recipe (what it produces).
+        /// </summary>
+        private static string GetRecipeDescription(RecipeDef recipe)
+        {
+            if (recipe == null)
+                return "";
+
+            List<string> descriptions = new List<string>();
+
+            // Add what it produces
+            if (recipe.products != null && recipe.products.Count > 0)
+            {
+                foreach (ThingDefCountClass product in recipe.products)
+                {
+                    string productDesc = $"Makes {product.count} {product.thingDef.LabelCap}";
+                    descriptions.Add(productDesc);
+                }
+            }
+            else if (recipe.ProducedThingDef != null)
+            {
+                // Check recipe's ProducedThingDef if no products list
+                descriptions.Add($"Makes {recipe.ProducedThingDef.LabelCap}");
+            }
+
+            // Add work amount if available
+            if (recipe.workAmount > 0)
+            {
+                descriptions.Add($"Work: {recipe.workAmount}");
+            }
+
+            // Add skill requirement if available
+            if (recipe.workSkill != null)
+            {
+                string skillInfo = recipe.workSkill.LabelCap.ToString();
+                if (recipe.workSkillLearnFactor > 0)
+                {
+                    skillInfo += $" (Learn factor: {recipe.workSkillLearnFactor:F1})";
+                }
+                descriptions.Add(skillInfo);
+            }
+
+            if (descriptions.Count == 0)
+                return "";
+
+            return string.Join(", ", descriptions);
+        }
+
+        /// <summary>
+        /// Gets cost information for a bill (ingredients required).
+        /// </summary>
+        private static string GetBillCostInfo(Bill bill)
+        {
+            if (bill?.recipe == null)
+                return "";
+
+            List<string> costs = new List<string>();
+
+            // Get ingredient costs
+            if (bill.recipe.ingredients != null && bill.recipe.ingredients.Count > 0)
+            {
+                foreach (IngredientCount ingredient in bill.recipe.ingredients)
+                {
+                    string ingredientName = ingredient.filter.Summary;
+                    float amount = ingredient.GetBaseCount();
+                    costs.Add($"{amount} {ingredientName}");
+                }
+            }
+
+            // Get fixed ingredient costs
+            if (bill.recipe.fixedIngredientFilter != null && bill.recipe.fixedIngredientFilter.AllowedThingDefs.Any())
+            {
+                // Only show if not already covered by ingredients list
+                if (bill.recipe.ingredients == null || bill.recipe.ingredients.Count == 0)
+                {
+                    costs.Add(bill.recipe.fixedIngredientFilter.Summary);
+                }
+            }
+
+            if (costs.Count == 0)
+                return "";
+
+            return string.Join(", ", costs);
+        }
+
+        /// <summary>
+        /// Gets description for a bill (what it produces).
+        /// </summary>
+        private static string GetBillDescription(Bill bill)
+        {
+            if (bill?.recipe == null)
+                return "";
+
+            List<string> descriptions = new List<string>();
+
+            // Add what it produces
+            if (bill.recipe.products != null && bill.recipe.products.Count > 0)
+            {
+                foreach (ThingDefCountClass product in bill.recipe.products)
+                {
+                    string productDesc = $"Makes {product.count} {product.thingDef.LabelCap}";
+                    descriptions.Add(productDesc);
+                }
+            }
+            else if (bill.recipe.ProducedThingDef != null)
+            {
+                // Check recipe's ProducedThingDef if no products list
+                descriptions.Add($"Makes {bill.recipe.ProducedThingDef.LabelCap}");
+            }
+
+            // Add work amount if available
+            if (bill.recipe.workAmount > 0)
+            {
+                descriptions.Add($"Work: {bill.recipe.workAmount}");
+            }
+
+            // Add skill requirement if available
+            if (bill.recipe.workSkill != null)
+            {
+                string skillInfo = bill.recipe.workSkill.LabelCap.ToString();
+                if (bill.recipe.workSkillLearnFactor > 0)
+                {
+                    skillInfo += $" (Learn factor: {bill.recipe.workSkillLearnFactor:F1})";
+                }
+                descriptions.Add(skillInfo);
+            }
+
+            if (descriptions.Count == 0)
+                return "";
+
+            return string.Join(", ", descriptions);
         }
     }
 }
