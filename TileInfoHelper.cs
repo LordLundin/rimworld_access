@@ -21,6 +21,10 @@ namespace RimWorldAccess
             if (map == null || !position.InBounds(map))
                 return "Out of bounds";
 
+
+            // Check fog of war - if fogged, return "unseen" immediately
+            if (position.Fogged(map))
+                return "unseen";
             var sb = new StringBuilder();
 
             // Get all things at this position
@@ -147,24 +151,34 @@ namespace RimWorldAccess
             if (zone != null)
             {
                 if (addedSomething) sb.Append(", ");
-                sb.Append($"in {zone.label}");
+                sb.Append(zone.label);
             }
 
-            // Add roofed/unroofed status
+            // Add roofed status (only if roofed, not unroofed)
             RoofDef roof = position.GetRoof(map);
-            string roofStatus = (roof != null) ? "roofed" : "unroofed";
-            if (addedSomething)
-                sb.Append($", {roofStatus}");
-            else
-                sb.Append(roofStatus);
+            if (roof != null)
+            {
+                if (addedSomething)
+                    sb.Append(", roofed");
+                else
+                    sb.Append("roofed");
+                addedSomething = true;
+            }
 
             // Add light level
             PsychGlow lightLevel = map.glowGrid.PsychGlowAt(position);
             string lightDescription = lightLevel.GetLabel();
-            sb.Append($", {lightDescription}");
+            if (addedSomething)
+                sb.Append($", {lightDescription}");
+            else
+                sb.Append(lightDescription);
+            addedSomething = true;
 
             // Add coordinates
-            sb.Append($", at {position.x}, {position.z}");
+            if (addedSomething)
+                sb.Append($", {position.x}, {position.z}");
+            else
+                sb.Append($"{position.x}, {position.z}");
 
             return sb.ToString();
         }
@@ -330,10 +344,6 @@ namespace RimWorldAccess
             // List all pawns
             if (pawns.Count > 0)
             {
-                sb.Append($"{pawns.Count} pawn");
-                if (pawns.Count > 1) sb.Append("s");
-                sb.Append(": ");
-
                 for (int i = 0; i < pawns.Count; i++)
                 {
                     if (i > 0) sb.Append(", ");
@@ -344,10 +354,7 @@ namespace RimWorldAccess
             // List all items
             if (items.Count > 0)
             {
-                if (pawns.Count > 0) sb.Append(". ");
-                sb.Append($"{items.Count} item");
-                if (items.Count > 1) sb.Append("s");
-                sb.Append(": ");
+                if (pawns.Count > 0) sb.Append(", ");
 
                 int displayLimit = 10;
                 for (int i = 0; i < items.Count && i < displayLimit; i++)
@@ -459,8 +466,8 @@ namespace RimWorldAccess
         }
 
         /// <summary>
-        /// Gets information about lighting at a tile (key 4).
-        /// Shows light level and natural/artificial status.
+        /// Gets information about brightness and temperature at a tile (key 4).
+        /// Shows light level, temperature, and indoor/outdoor status.
         /// </summary>
         public static string GetLightInfo(IntVec3 position, Map map)
         {
@@ -478,39 +485,18 @@ namespace RimWorldAccess
             float glow = map.glowGrid.GroundGlowAt(position, false);
             sb.Append($" ({glow:F1} glow)");
 
-            // Check if natural light
-            float naturalLight = map.skyManager.CurSkyGlow;
-            if (naturalLight > 0)
-                sb.Append($", natural light {naturalLight:F1}");
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Gets information about temperature at a tile (key 5).
-        /// Shows current temperature and indoor/outdoor status.
-        /// </summary>
-        public static string GetTemperatureInfo(IntVec3 position, Map map)
-        {
-            if (map == null || !position.InBounds(map))
-                return "Out of bounds";
-
-            var sb = new StringBuilder();
-
             // Get temperature
             float temperature = position.GetTemperature(map);
-            string tempCelsius = $"{temperature:F1}°C";
-
-            sb.Append(tempCelsius);
+            sb.Append($", {temperature:F1}°C");
 
             // Check if indoors/outdoors
             RoofDef roof = position.GetRoof(map);
             if (roof != null)
-                sb.Append(" indoors");
+                sb.Append(", indoors");
             else
-                sb.Append(" outdoors");
+                sb.Append(", outdoors");
 
-            // Check for temperature control buildings nearby
+            // Check for temperature control buildings
             List<Thing> things = position.GetThingList(map);
             var buildings = things.OfType<Building>().ToList();
 
@@ -522,6 +508,49 @@ namespace RimWorldAccess
                     sb.Append($". {building.LabelShortCap}: {tempControlInfo}");
                 }
             }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Gets information about room stats at a tile (key 5).
+        /// Shows room impressiveness, cleanliness, wealth, and room type.
+        /// </summary>
+        public static string GetRoomStatsInfo(IntVec3 position, Map map)
+        {
+            if (map == null || !position.InBounds(map))
+                return "Out of bounds";
+
+            Room room = position.GetRoom(map);
+
+            if (room == null)
+                return "no room";
+
+            // Check if outdoor (no roof)
+            RoofDef roof = position.GetRoof(map);
+            if (roof == null)
+                return "outdoors";
+
+            var sb = new StringBuilder();
+
+            // Get room role/type
+            if (room.Role != null)
+            {
+                sb.Append(room.Role.LabelCap);
+            }
+            else
+            {
+                sb.Append("Room");
+            }
+
+            // Get room stats
+            float impressiveness = room.GetStat(RoomStatDefOf.Impressiveness);
+            float cleanliness = room.GetStat(RoomStatDefOf.Cleanliness);
+            float wealth = room.GetStat(RoomStatDefOf.Wealth);
+
+            sb.Append($", impressiveness {impressiveness:F0}");
+            sb.Append($", cleanliness {cleanliness:F1}");
+            sb.Append($", wealth {wealth:F0}");
 
             return sb.ToString();
         }

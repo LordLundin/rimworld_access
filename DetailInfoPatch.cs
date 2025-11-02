@@ -6,7 +6,7 @@ namespace RimWorldAccess
 {
     /// <summary>
     /// Harmony patch to add hotkeys for specific tile information categories.
-    /// Keys 1-5 announce different types of information about the current cursor tile.
+    // Keys 1-5: 1=Items/Pawns, 2=Flooring, 3=Plants, 4=Brightness/Temp, 5=Room Stats
     /// </summary>
     [HarmonyPatch(typeof(CameraDriver))]
     [HarmonyPatch("Update")]
@@ -105,7 +105,7 @@ namespace RimWorldAccess
                 case KeyCode.Alpha4:
                     return TileInfoHelper.GetLightInfo(position, map);
                 case KeyCode.Alpha5:
-                    return TileInfoHelper.GetTemperatureInfo(position, map);
+                    return TileInfoHelper.GetRoomStatsInfo(position, map);
                 default:
                     return "Unknown key";
             }
