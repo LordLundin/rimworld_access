@@ -481,16 +481,14 @@ namespace RimWorldAccess
             {
                 bool handled = false;
 
-                if (key == KeyCode.Tab)
+                if (key == KeyCode.LeftArrow)
                 {
-                    if (Event.current.shift)
-                    {
-                        PrisonerTabState.PreviousSection();
-                    }
-                    else
-                    {
-                        PrisonerTabState.NextSection();
-                    }
+                    PrisonerTabState.PreviousSection();
+                    handled = true;
+                }
+                else if (key == KeyCode.RightArrow)
+                {
+                    PrisonerTabState.NextSection();
                     handled = true;
                 }
                 else if (key == KeyCode.DownArrow)
@@ -501,16 +499,6 @@ namespace RimWorldAccess
                 else if (key == KeyCode.UpArrow)
                 {
                     PrisonerTabState.NavigateUp();
-                    handled = true;
-                }
-                else if (key == KeyCode.LeftArrow)
-                {
-                    PrisonerTabState.AdjustLeft();
-                    handled = true;
-                }
-                else if (key == KeyCode.RightArrow)
-                {
-                    PrisonerTabState.AdjustRight();
                     handled = true;
                 }
                 else if (key == KeyCode.Return || key == KeyCode.KeypadEnter)

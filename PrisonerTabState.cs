@@ -117,7 +117,7 @@ namespace RimWorldAccess
         }
 
         /// <summary>
-        /// Navigates to the next section (Tab key).
+        /// Navigates to the next section (Right arrow key).
         /// </summary>
         public static void NextSection()
         {
@@ -136,7 +136,7 @@ namespace RimWorldAccess
         }
 
         /// <summary>
-        /// Navigates to the previous section (Shift+Tab).
+        /// Navigates to the previous section (Left arrow key).
         /// </summary>
         public static void PreviousSection()
         {
@@ -157,11 +157,19 @@ namespace RimWorldAccess
 
         /// <summary>
         /// Navigates down within the current section (Down arrow).
+        /// For medical care section, increases the care level.
         /// </summary>
         public static void NavigateDown()
         {
             if (!isActive || currentPawn == null)
                 return;
+
+            // Special handling for medical care - use up/down to adjust level
+            if (currentSection == TabSection.MedicalCare)
+            {
+                AdjustMedicalCare(1);
+                return;
+            }
 
             int maxIndex = GetMaxIndexForCurrentSection();
             if (maxIndex <= 0)
@@ -173,11 +181,19 @@ namespace RimWorldAccess
 
         /// <summary>
         /// Navigates up within the current section (Up arrow).
+        /// For medical care section, decreases the care level.
         /// </summary>
         public static void NavigateUp()
         {
             if (!isActive || currentPawn == null)
                 return;
+
+            // Special handling for medical care - use up/down to adjust level
+            if (currentSection == TabSection.MedicalCare)
+            {
+                AdjustMedicalCare(-1);
+                return;
+            }
 
             int maxIndex = GetMaxIndexForCurrentSection();
             if (maxIndex <= 0)
@@ -187,33 +203,6 @@ namespace RimWorldAccess
             AnnounceCurrentSelection();
         }
 
-        /// <summary>
-        /// Adjusts the current selection right (Right arrow) - for medical care and sliders.
-        /// </summary>
-        public static void AdjustRight()
-        {
-            if (!isActive || currentPawn == null)
-                return;
-
-            if (currentSection == TabSection.MedicalCare)
-            {
-                AdjustMedicalCare(1);
-            }
-        }
-
-        /// <summary>
-        /// Adjusts the current selection left (Left arrow) - for medical care and sliders.
-        /// </summary>
-        public static void AdjustLeft()
-        {
-            if (!isActive || currentPawn == null)
-                return;
-
-            if (currentSection == TabSection.MedicalCare)
-            {
-                AdjustMedicalCare(-1);
-            }
-        }
 
         /// <summary>
         /// Executes the selected action (Enter key).
@@ -412,7 +401,7 @@ namespace RimWorldAccess
             sb.AppendLine($"Prisoner Tab: {currentPawn.LabelShort}");
             sb.AppendLine($"Current Mode: {currentPawn.guest.ExclusiveInteractionMode.LabelCap}");
             sb.AppendLine($"Medical Care: {PrisonerTabHelper.GetMedicalCareLabel(currentPawn.playerSettings.medCare)}");
-            sb.AppendLine("\nPress Tab to navigate sections, Arrow keys within sections, Enter to select, Escape to close");
+            sb.AppendLine("\nPress Left/Right to navigate sections, Up/Down within sections, Enter to select, Escape to close");
 
             ClipboardHelper.CopyToClipboard(sb.ToString().TrimEnd());
         }
@@ -428,7 +417,7 @@ namespace RimWorldAccess
                 sb.AppendLine($"Suppression: {suppressionNeed.CurLevel:P0}");
             }
 
-            sb.AppendLine("\nPress Tab to navigate sections, Arrow keys within sections, Enter to select, Escape to close");
+            sb.AppendLine("\nPress Left/Right to navigate sections, Up/Down within sections, Enter to select, Escape to close");
 
             ClipboardHelper.CopyToClipboard(sb.ToString().TrimEnd());
         }
@@ -446,7 +435,7 @@ namespace RimWorldAccess
 
                 case TabSection.MedicalCare:
                     string careLevel = PrisonerTabHelper.GetMedicalCareLabel(currentPawn.playerSettings.medCare);
-                    ClipboardHelper.CopyToClipboard($"Medical Care: {careLevel}. Use Left/Right arrows to adjust");
+                    ClipboardHelper.CopyToClipboard($"Medical Care: {careLevel}. Use Up/Down arrows to adjust");
                     break;
 
                 case TabSection.ExclusiveModes:
