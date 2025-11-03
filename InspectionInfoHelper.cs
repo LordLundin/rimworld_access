@@ -102,6 +102,15 @@ namespace RimWorldAccess
                 if (building is IBillGiver)
                     categories.Add("Bills");
 
+                // Check for bed assignment
+                if (building is Building_Bed)
+                    categories.Add("Bed Assignment");
+
+                // Check for temperature control (coolers, heaters, vents)
+                var tempControl = building.TryGetComp<CompTempControl>();
+                if (tempControl != null)
+                    categories.Add("Temperature");
+
                 // Check for storage
                 if (building is IStoreSettingsParent || building is Building_Storage)
                     categories.Add("Storage");
@@ -317,6 +326,12 @@ namespace RimWorldAccess
                 case "Bills":
                     return GetBuildingBillsInfo(building);
 
+                case "Bed Assignment":
+                    return GetBuildingBedAssignmentInfo(building);
+
+                case "Temperature":
+                    return GetBuildingTemperatureInfo(building);
+
                 case "Storage":
                     return GetBuildingStorageInfo(building);
 
@@ -457,6 +472,76 @@ namespace RimWorldAccess
             }
 
             return "This building does not use power.";
+        }
+
+        /// <summary>
+        /// Gets bed assignment information for a bed.
+        /// </summary>
+        private static string GetBuildingBedAssignmentInfo(Building building)
+        {
+            if (building is Building_Bed bed)
+            {
+                var sb = new StringBuilder();
+
+                // Show if it's for colonists, prisoners, slaves, or medical
+                if (bed.ForPrisoners)
+                    sb.AppendLine("Type: Prison Bed");
+                else if (bed.Medical)
+                    sb.AppendLine("Type: Medical Bed");
+                else
+                    sb.AppendLine("Type: Colonist Bed");
+
+                sb.AppendLine();
+
+                // Show current assignments
+                if (bed.OwnersForReading != null && bed.OwnersForReading.Any())
+                {
+                    sb.AppendLine("Assigned to:");
+                    foreach (var owner in bed.OwnersForReading)
+                    {
+                        sb.AppendLine($"  {owner.LabelShort}");
+                    }
+                }
+                else
+                {
+                    sb.AppendLine("Not assigned to anyone");
+                }
+
+                sb.AppendLine();
+                sb.AppendLine("Press Enter to change assignments");
+
+                return sb.ToString();
+            }
+
+            return "This building is not a bed.";
+        }
+
+        /// <summary>
+        /// Gets temperature control information for a cooler/heater.
+        /// </summary>
+        private static string GetBuildingTemperatureInfo(Building building)
+        {
+            var tempControl = building.TryGetComp<CompTempControl>();
+            if (tempControl != null)
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine($"Target Temperature: {tempControl.targetTemperature}°C");
+
+                // Check if it's powered
+                var powerComp = building.TryGetComp<CompPowerTrader>();
+                if (powerComp != null)
+                {
+                    sb.AppendLine($"Power: {(powerComp.PowerOn ? "On" : "Off")}");
+                }
+
+                sb.AppendLine();
+                sb.AppendLine("Press Enter to adjust temperature");
+
+                return sb.ToString();
+            }
+
+            return "This building does not have temperature control.";
         }
 
         /// <summary>

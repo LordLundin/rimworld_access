@@ -1014,12 +1014,12 @@ namespace RimWorldAccess
                 }
             }
 
-            // ===== PRIORITY 9: Handle Enter key for building inspection =====
+            // ===== PRIORITY 9: Handle Enter key for inspection menu =====
             // Don't process if in zone creation mode
             if (ZoneCreationState.IsInCreationMode)
                 return;
 
-            // Handle Enter key for building inspection
+            // Handle Enter key for opening the inspection menu (same as I key)
             if (key == KeyCode.Return || key == KeyCode.KeypadEnter)
             {
                 // Only process during normal gameplay with a valid map
@@ -1036,77 +1036,22 @@ namespace RimWorldAccess
 
                 // Get the cursor position
                 IntVec3 cursorPosition = MapNavigationState.CurrentCursorPosition;
-                Map map = Find.CurrentMap;
 
                 // Validate cursor position
-                if (!cursorPosition.IsValid || !cursorPosition.InBounds(map))
+                if (!cursorPosition.IsValid || !cursorPosition.InBounds(Find.CurrentMap))
                 {
                     ClipboardHelper.CopyToClipboard("Invalid position");
                     Event.current.Use();
                     return;
                 }
 
-                // Check if there's a building at the cursor position
-                List<Thing> thingsAtPosition = map.thingGrid.ThingsListAt(cursorPosition);
-                Thing buildingOrThing = null;
+                // Prevent the default Enter behavior
+                Event.current.Use();
 
-                // First priority: research benches - open research menu
-                foreach (Thing thing in thingsAtPosition)
-                {
-                    if (thing is Building_ResearchBench)
-                    {
-                        // Open windowless research menu
-                        WindowlessResearchMenuState.Open();
-                        Event.current.Use();
-                        return;
-                    }
-                }
-
-                // Second priority: beds - open bed assignment menu
-                foreach (Thing thing in thingsAtPosition)
-                {
-                    if (thing is Building_Bed bed)
-                    {
-                        // Directly open bed assignment menu
-                        BedAssignmentState.Open(bed);
-                        Event.current.Use();
-                        return;
-                    }
-                }
-
-                // Third priority: buildings with temperature control (coolers, heaters, etc.)
-                foreach (Thing thing in thingsAtPosition)
-                {
-                    if (thing is Building building)
-                    {
-                        CompTempControl tempControl = building.TryGetComp<CompTempControl>();
-                        if (tempControl != null)
-                        {
-                            // Directly open temperature control menu for coolers/heaters
-                            TempControlMenuState.Open(building);
-                            Event.current.Use();
-                            return;
-                        }
-                    }
-                }
-
-                // Fourth priority: buildings with inspect tabs
-                foreach (Thing thing in thingsAtPosition)
-                {
-                    if (thing.def.inspectorTabs != null && thing.def.inspectorTabs.Count > 0)
-                    {
-                        buildingOrThing = thing;
-                        break;
-                    }
-                }
-
-                // If there's a building with tabs, open building inspect menu
-                if (buildingOrThing != null)
-                {
-                    BuildingInspectState.Open(buildingOrThing);
-                    Event.current.Use();
-                    return;
-                }
+                // Open the windowless inspection menu at the current cursor position
+                // This is the same menu that opens with the I key
+                WindowlessInspectionState.Open(cursorPosition);
+                return;
             }
 
             // ===== PRIORITY 10: Handle right bracket ] key for colonist orders =====

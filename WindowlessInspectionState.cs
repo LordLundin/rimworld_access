@@ -50,7 +50,6 @@ namespace RimWorldAccess
         private static SkillRecord currentSelectedSkill = null;
 
         private static IntVec3 inspectionPosition;
-        private static bool includeSelectedPawn = false;
 
         /// <summary>
         /// Opens the inspection menu for the specified position.
@@ -117,35 +116,16 @@ namespace RimWorldAccess
         private static void BuildObjectList()
         {
             availableObjects.Clear();
-            includeSelectedPawn = false;
 
             if (Find.CurrentMap == null)
                 return;
 
-            // Check if there's a selected pawn (from Tab cycling)
-            Pawn selectedPawn = Find.Selector.SingleSelectedThing as Pawn;
-            if (selectedPawn == null && Find.Selector.SelectedPawns != null && Find.Selector.SelectedPawns.Any())
-            {
-                selectedPawn = Find.Selector.SelectedPawns.FirstOrDefault();
-            }
-
-            // If there's a selected pawn, add it as the first option
-            if (selectedPawn != null)
-            {
-                availableObjects.Add(selectedPawn);
-                includeSelectedPawn = true;
-            }
-
             // Get all selectable objects at the cursor position
             var objectsAtPosition = Selector.SelectableObjectsAt(inspectionPosition, Find.CurrentMap);
 
-            // Filter and add objects (excluding the selected pawn if already added)
+            // Filter and add objects
             foreach (var obj in objectsAtPosition)
             {
-                // Skip if this is the selected pawn we already added
-                if (includeSelectedPawn && obj == selectedPawn)
-                    continue;
-
                 // Only include things we want to inspect
                 if (obj is Pawn || obj is Building || obj is Plant || obj is Thing)
                 {
@@ -471,6 +451,47 @@ namespace RimWorldAccess
                                 }
                             }
 
+                            // Handle building-specific categories
+                            if (currentSelectedObject is Building building)
+                            {
+                                // Bills category - open bills menu
+                                if (currentSelectedCategory == "Bills" && building is IBillGiver billGiver)
+                                {
+                                    Close();
+                                    BillsMenuState.Open(billGiver, building.Position);
+                                    return;
+                                }
+                                // Bed Assignment category - open bed assignment menu
+                                else if (currentSelectedCategory == "Bed Assignment" && building is Building_Bed bed)
+                                {
+                                    Close();
+                                    BedAssignmentState.Open(bed);
+                                    return;
+                                }
+                                // Temperature category - open temperature control menu
+                                else if (currentSelectedCategory == "Temperature")
+                                {
+                                    var tempControl = building.TryGetComp<CompTempControl>();
+                                    if (tempControl != null)
+                                    {
+                                        Close();
+                                        TempControlMenuState.Open(building);
+                                        return;
+                                    }
+                                }
+                                // Storage category - open storage settings menu
+                                else if (currentSelectedCategory == "Storage" && building is IStoreSettingsParent storageParent)
+                                {
+                                    var settings = storageParent.GetStoreSettings();
+                                    if (settings != null)
+                                    {
+                                        Close();
+                                        StorageSettingsMenuState.Open(settings);
+                                        return;
+                                    }
+                                }
+                            }
+
                             // Fallback to detailed info for other categories
                             currentDetailedInfo = InspectionInfoHelper.GetCategoryInfo(
                                 currentSelectedObject,
@@ -682,15 +703,8 @@ namespace RimWorldAccess
                         else if (objectListIndex >= 0 && objectListIndex < availableObjects.Count)
                         {
                             var obj = availableObjects[objectListIndex];
-                            string prefix = "";
 
-                            // Add prefix for selected pawn
-                            if (includeSelectedPawn && objectListIndex == 0)
-                            {
-                                prefix = "Selected: ";
-                            }
-
-                            announcement = $"{prefix}{InspectionInfoHelper.GetObjectSummary(obj)}\n" +
+                            announcement = $"{InspectionInfoHelper.GetObjectSummary(obj)}\n" +
                                          $"Item {objectListIndex + 1} of {availableObjects.Count}\n" +
                                          $"Press Enter to inspect, Escape to close";
                         }
