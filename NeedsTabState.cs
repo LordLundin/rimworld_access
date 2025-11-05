@@ -258,7 +258,7 @@ namespace RimWorldAccess
                 case MenuLevel.SectionMenu:
                     sb.AppendLine($"Needs - {sections[sectionIndex]}");
                     sb.AppendLine($"Section {sectionIndex + 1} of {sections.Count}");
-                    sb.AppendLine("Press Enter to open, Escape to close");
+                    sb.AppendLine("Press Enter to open");
                     break;
 
                 case MenuLevel.NeedsList:
@@ -267,7 +267,7 @@ namespace RimWorldAccess
                         var need = needs[needIndex];
                         sb.AppendLine($"{need.Label}: {need.Percentage:F0}%{need.Arrow}");
                         sb.AppendLine($"Need {needIndex + 1} of {needs.Count}");
-                        sb.AppendLine("Press Enter for details, Escape to go back");
+                        sb.AppendLine("Press Enter for details");
                     }
                     break;
 
@@ -276,8 +276,6 @@ namespace RimWorldAccess
                     {
                         var need = needs[needIndex];
                         sb.AppendLine(need.DetailedInfo);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
 
@@ -289,7 +287,7 @@ namespace RimWorldAccess
                         string stackStr = thought.StackCount > 1 ? $" x{thought.StackCount}" : "";
                         sb.AppendLine($"{thought.Label}{stackStr}: {effectStr}");
                         sb.AppendLine($"Thought {thoughtIndex + 1} of {thoughts.Count}");
-                        sb.AppendLine("Press Enter for details, Escape to go back");
+                        sb.AppendLine("Press Enter for details");
                     }
                     break;
 
@@ -298,8 +296,6 @@ namespace RimWorldAccess
                     {
                         var thought = thoughts[thoughtIndex];
                         sb.AppendLine(thought.DetailedInfo);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
             }

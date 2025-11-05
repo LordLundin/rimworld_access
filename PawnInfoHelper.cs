@@ -59,17 +59,7 @@ namespace RimWorldAccess
                         string bodyPart = hediff.Part != null ? $" on {hediff.Part.Label}" : "";
                         sb.Append($"  - {hediff.LabelCap}{bodyPart}");
 
-                        // Get description
-                        string description = hediff.Description;
-                        if (!string.IsNullOrEmpty(description))
-                        {
-                            // Strip tags, replace newlines with spaces, and collapse multiple spaces
-                            description = description.StripTags().Trim();
-                            description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
-                            sb.Append($": {description}");
-                        }
-
-                        // Get capacity modifiers directly from the hediff
+                        // Get capacity modifiers directly from the hediff (show mechanical effects FIRST)
                         var capMods = hediff.CapMods;
                         var effects = new List<string>();
 
@@ -172,9 +162,20 @@ namespace RimWorldAccess
                             }
                         }
 
+                        // Show mechanical effects BEFORE description
                         if (effects.Any())
                         {
                             sb.Append(". Affects: " + string.Join(", ", effects));
+                        }
+
+                        // Get description (show AFTER mechanical effects)
+                        string description = hediff.Description;
+                        if (!string.IsNullOrEmpty(description))
+                        {
+                            // Strip tags, replace newlines with spaces, and collapse multiple spaces
+                            description = description.StripTags().Trim();
+                            description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
+                            sb.Append($". {description}");
                         }
 
                         sb.AppendLine();

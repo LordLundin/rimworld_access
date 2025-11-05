@@ -390,8 +390,6 @@ namespace RimWorldAccess
                     announcement += $"\n{helpText}";
                 }
 
-                announcement += "\nEscape to close";
-
                 ClipboardHelper.CopyToClipboard(announcement);
             }
             catch (Exception ex)

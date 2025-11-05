@@ -401,7 +401,7 @@ namespace RimWorldAccess
             sb.AppendLine($"Prisoner Tab: {currentPawn.LabelShort}");
             sb.AppendLine($"Current Mode: {currentPawn.guest.ExclusiveInteractionMode.LabelCap}");
             sb.AppendLine($"Medical Care: {PrisonerTabHelper.GetMedicalCareLabel(currentPawn.playerSettings.medCare)}");
-            sb.AppendLine("\nPress Left/Right to navigate sections, Up/Down within sections, Enter to select, Escape to close");
+            sb.AppendLine("\nPress Left/Right to navigate sections, Up/Down within sections, Enter to select");
 
             ClipboardHelper.CopyToClipboard(sb.ToString().TrimEnd());
         }
@@ -417,7 +417,7 @@ namespace RimWorldAccess
                 sb.AppendLine($"Suppression: {suppressionNeed.CurLevel:P0}");
             }
 
-            sb.AppendLine("\nPress Left/Right to navigate sections, Up/Down within sections, Enter to select, Escape to close");
+            sb.AppendLine("\nPress Left/Right to navigate sections, Up/Down within sections, Enter to select");
 
             ClipboardHelper.CopyToClipboard(sb.ToString().TrimEnd());
         }

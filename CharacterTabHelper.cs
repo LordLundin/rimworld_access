@@ -167,11 +167,7 @@ namespace RimWorldAccess
             sb.AppendLine($"{backstory.TitleCapFor(pawn.gender)}:");
             sb.AppendLine();
 
-            // Full description
-            sb.AppendLine(backstory.FullDescriptionFor(pawn));
-            sb.AppendLine();
-
-            // Skill modifiers
+            // Skill modifiers (show mechanical effects first)
             if (backstory.skillGains != null && backstory.skillGains.Count > 0)
             {
                 sb.AppendLine("Skill modifiers:");
@@ -192,7 +188,11 @@ namespace RimWorldAccess
                 {
                     sb.AppendLine($"  {tag}");
                 }
+                sb.AppendLine();
             }
+
+            // Full description (show after mechanical effects)
+            sb.AppendLine(backstory.FullDescriptionFor(pawn));
 
             return sb.ToString().TrimEnd();
         }
@@ -417,14 +417,7 @@ namespace RimWorldAccess
             sb.AppendLine($"{ability.def.LabelCap.ToString().StripTags()}:");
             sb.AppendLine();
 
-            // Description
-            if (!string.IsNullOrEmpty(ability.def.description))
-            {
-                sb.AppendLine(ability.def.description);
-                sb.AppendLine();
-            }
-
-            // Cooldown
+            // Cooldown (show mechanical effects first)
             if (ability.def.cooldownTicksRange.max > 0)
             {
                 float cooldownDays = ability.def.cooldownTicksRange.max / 60000f;
@@ -440,6 +433,13 @@ namespace RimWorldAccess
             else
             {
                 sb.AppendLine("Status: Ready");
+            }
+
+            // Description (show after mechanical effects)
+            if (!string.IsNullOrEmpty(ability.def.description))
+            {
+                sb.AppendLine();
+                sb.AppendLine(ability.def.description);
             }
 
             return sb.ToString().TrimEnd();

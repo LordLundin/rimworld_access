@@ -310,14 +310,12 @@ namespace RimWorldAccess
                 case MenuLevel.SectionMenu:
                     sb.AppendLine($"Training - {sections[sectionIndex]}");
                     sb.AppendLine($"Section {sectionIndex + 1} of {sections.Count}");
-                    sb.AppendLine("Press Enter to open, Escape to close");
+                    sb.AppendLine("Press Enter to open");
                     break;
 
                 case MenuLevel.TrainabilityInfo:
                     string info = TrainingTabHelper.GetTrainabilityInfo(currentPawn);
                     sb.AppendLine(info);
-                    sb.AppendLine();
-                    sb.AppendLine("Press Escape to go back");
                     break;
 
                 case MenuLevel.MasterSettingsList:
@@ -342,7 +340,7 @@ namespace RimWorldAccess
                         }
 
                         sb.AppendLine($"Setting {settingIndex + 1} of {settingNames.Count}");
-                        sb.AppendLine("Press Enter to change, Escape to go back");
+                        sb.AppendLine("Press Enter to change");
                     }
                     break;
 
@@ -357,7 +355,7 @@ namespace RimWorldAccess
 
                         sb.AppendLine($"Master: {masterName}");
                         sb.AppendLine($"Option {masterChoiceIndex + 1} of {masterSettings.AvailableMasters.Count + 1}");
-                        sb.AppendLine("Press Enter to confirm, Escape to cancel");
+                        sb.AppendLine("Press Enter to confirm");
                     }
                     break;
 
@@ -373,7 +371,7 @@ namespace RimWorldAccess
                             sb.AppendLine($"Progress: {trainable.CurrentSteps} / {trainable.RequiredSteps}");
                         }
                         sb.AppendLine($"Skill {trainableIndex + 1} of {trainables.Count}");
-                        sb.AppendLine("Press Space to toggle, Enter for details, Escape to go back");
+                        sb.AppendLine("Press Space to toggle, Enter for details");
                     }
                     break;
 
@@ -382,8 +380,6 @@ namespace RimWorldAccess
                     {
                         var trainable = trainables[trainableIndex];
                         sb.AppendLine(trainable.DetailedInfo);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
             }

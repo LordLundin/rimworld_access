@@ -259,7 +259,7 @@ namespace RimWorldAccess
                 case MenuLevel.SectionMenu:
                     sb.AppendLine($"Social - {sections[sectionIndex]}");
                     sb.AppendLine($"Section {sectionIndex + 1} of {sections.Count}");
-                    sb.AppendLine("Press Enter to open, Escape to close");
+                    sb.AppendLine("Press Enter to open");
                     break;
 
                 case MenuLevel.IdeologyInfo:
@@ -278,8 +278,6 @@ namespace RimWorldAccess
                             sb.AppendLine();
                             sb.AppendLine(ideologyInfo.RoleDetails);
                         }
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
 
@@ -293,7 +291,7 @@ namespace RimWorldAccess
                         sb.AppendLine($"Their opinion: {relation.TheirOpinion:+0;-0;0}");
                         sb.AppendLine($"Situation: {relation.Situation}");
                         sb.AppendLine($"Relation {relationIndex + 1} of {relations.Count}");
-                        sb.AppendLine("Press Enter for details, Escape to go back");
+                        sb.AppendLine("Press Enter for details");
                     }
                     break;
 
@@ -302,8 +300,6 @@ namespace RimWorldAccess
                     {
                         var relation = relations[relationIndex];
                         sb.AppendLine(relation.DetailedInfo);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
 
@@ -329,7 +325,6 @@ namespace RimWorldAccess
                         }
 
                         sb.AppendLine($"Interaction {logIndex + 1} of {socialLog.Count}");
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
             }

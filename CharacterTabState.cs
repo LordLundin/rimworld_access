@@ -362,7 +362,7 @@ namespace RimWorldAccess
                 case MenuLevel.SectionMenu:
                     sb.AppendLine($"Character - {sections[sectionIndex]}");
                     sb.AppendLine($"Section {sectionIndex + 1} of {sections.Count}");
-                    sb.AppendLine("Press Enter to open, Escape to close");
+                    sb.AppendLine("Press Enter to open");
                     break;
 
                 case MenuLevel.BasicInfo:
@@ -385,8 +385,6 @@ namespace RimWorldAccess
                         {
                             sb.AppendLine($"Role: {basicInfo.Role}");
                         }
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
 
@@ -396,7 +394,7 @@ namespace RimWorldAccess
                         var backstory = backstories[backstoryIndex];
                         sb.AppendLine($"{backstory.Title}");
                         sb.AppendLine($"Backstory {backstoryIndex + 1} of {backstories.Count}");
-                        sb.AppendLine("Press Enter for details, Escape to go back");
+                        sb.AppendLine("Press Enter for details");
                     }
                     break;
 
@@ -405,8 +403,6 @@ namespace RimWorldAccess
                     {
                         var backstory = backstories[backstoryIndex];
                         sb.AppendLine(backstory.DetailedInfo);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
 
@@ -416,7 +412,7 @@ namespace RimWorldAccess
                         var trait = traits[traitIndex];
                         sb.AppendLine($"{trait.Label}");
                         sb.AppendLine($"Trait {traitIndex + 1} of {traits.Count}");
-                        sb.AppendLine("Press Enter for details, Escape to go back");
+                        sb.AppendLine("Press Enter for details");
                     }
                     break;
 
@@ -425,8 +421,6 @@ namespace RimWorldAccess
                     {
                         var trait = traits[traitIndex];
                         sb.AppendLine(trait.DetailedInfo);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
 
@@ -436,7 +430,7 @@ namespace RimWorldAccess
                         var incapacity = incapacities[incapacityIndex];
                         sb.AppendLine($"{incapacity.Label}");
                         sb.AppendLine($"Incapacity {incapacityIndex + 1} of {incapacities.Count}");
-                        sb.AppendLine("Press Enter for details, Escape to go back");
+                        sb.AppendLine("Press Enter for details");
                     }
                     break;
 
@@ -445,8 +439,6 @@ namespace RimWorldAccess
                     {
                         var incapacity = incapacities[incapacityIndex];
                         sb.AppendLine(incapacity.DetailedInfo);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
 
@@ -456,7 +448,7 @@ namespace RimWorldAccess
                         var ability = abilities[abilityIndex];
                         sb.AppendLine($"{ability.Label}");
                         sb.AppendLine($"Ability {abilityIndex + 1} of {abilities.Count}");
-                        sb.AppendLine("Press Enter for details, Escape to go back");
+                        sb.AppendLine("Press Enter for details");
                     }
                     break;
 
@@ -465,8 +457,6 @@ namespace RimWorldAccess
                     {
                         var ability = abilities[abilityIndex];
                         sb.AppendLine(ability.DetailedInfo);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
             }

@@ -590,14 +590,32 @@ namespace RimWorldAccess
             sb.AppendLine($"{hediff.LabelCap.ToString().StripTags()}:");
             sb.AppendLine();
 
-            // Description
-            if (!string.IsNullOrEmpty(hediff.def.description))
+            // Part affected (show mechanical effects first)
+            if (hediff.Part != null)
             {
-                sb.AppendLine(hediff.def.description);
+                // Show part efficiency if available
+                string partInfo = $"Affects: {hediff.Part.Label}";
+                if (hediff.pawn != null)
+                {
+                    float efficiency = PawnCapacityUtility.CalculatePartEfficiency(hediff.pawn.health.hediffSet, hediff.Part);
+                    if (efficiency < 0.999f) // Only show if less than 100%
+                    {
+                        partInfo += $" (part at {efficiency:P0})";
+                    }
+                }
+                sb.AppendLine(partInfo);
                 sb.AppendLine();
             }
 
-            // Severity/Stage
+            // Get all mechanical effects from RimWorld's TipStringExtra
+            string tipExtra = hediff.TipStringExtra;
+            if (!string.IsNullOrEmpty(tipExtra))
+            {
+                sb.AppendLine(tipExtra.Trim());
+                sb.AppendLine();
+            }
+
+            // Severity/Stage (if not already in TipStringExtra)
             if (hediff.def.stages != null && hediff.def.stages.Count > 0)
             {
                 sb.AppendLine($"Stage: {hediff.CurStageIndex + 1} of {hediff.def.stages.Count}");
@@ -638,10 +656,10 @@ namespace RimWorldAccess
                 sb.AppendLine();
             }
 
-            // Part efficiency
-            if (hediff.Part != null)
+            // Description (show after mechanical effects)
+            if (!string.IsNullOrEmpty(hediff.def.description))
             {
-                sb.AppendLine($"Affects: {hediff.Part.Label}");
+                sb.AppendLine(hediff.def.description);
             }
 
             return sb.ToString().TrimEnd();

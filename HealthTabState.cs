@@ -664,7 +664,7 @@ namespace RimWorldAccess
                 case MenuLevel.SectionMenu:
                     sb.AppendLine($"Health - {sections[sectionIndex]}");
                     sb.AppendLine($"Section {sectionIndex + 1} of {sections.Count}");
-                    sb.AppendLine("Press Enter to open, Escape to close");
+                    sb.AppendLine("Press Enter to open");
                     break;
 
                 case MenuLevel.MedicalSettingsList:
@@ -688,7 +688,7 @@ namespace RimWorldAccess
                     }
 
                     sb.AppendLine($"Setting {medicalSettingIndex + 1} of {medicalSettings.Count}");
-                    sb.AppendLine("Press Enter to change, Escape to go back");
+                    sb.AppendLine("Press Enter to change");
                     break;
 
                 case MenuLevel.MedicalSettingChange:
@@ -710,7 +710,7 @@ namespace RimWorldAccess
                             sb.AppendLine($"Option {settingChoiceIndex + 1} of {availableMedicalCare.Count}");
                         }
                     }
-                    sb.AppendLine("Press Enter to confirm, Escape to cancel");
+                    sb.AppendLine("Press Enter to confirm");
                     break;
 
                 case MenuLevel.CapacitiesList:
@@ -719,7 +719,7 @@ namespace RimWorldAccess
                         var capacity = capacities[capacityIndex];
                         sb.AppendLine($"{capacity.Label}: {capacity.LevelLabel}");
                         sb.AppendLine($"Capacity {capacityIndex + 1} of {capacities.Count}");
-                        sb.AppendLine("Press Enter for details, Escape to go back");
+                        sb.AppendLine("Press Enter for details");
                     }
                     break;
 
@@ -728,8 +728,6 @@ namespace RimWorldAccess
                     {
                         var capacity = capacities[capacityIndex];
                         sb.AppendLine(capacity.DetailedBreakdown);
-                        sb.AppendLine();
-                        sb.AppendLine("Press Escape to go back");
                     }
                     break;
 
@@ -739,20 +737,20 @@ namespace RimWorldAccess
                         var bill = queuedOperations[operationIndex];
                         sb.AppendLine($"Queued: {bill.LabelCap.StripTags()}");
                         sb.AppendLine($"Operation {operationIndex + 1} of {queuedOperations.Count + 1}");
-                        sb.AppendLine("Press Enter for actions, Escape to go back");
+                        sb.AppendLine("Press Enter for actions");
                     }
                     else
                     {
                         sb.AppendLine("Add Operation");
                         sb.AppendLine($"Operation {operationIndex + 1} of {queuedOperations.Count + 1}");
-                        sb.AppendLine("Press Enter to add, Escape to go back");
+                        sb.AppendLine("Press Enter to add");
                     }
                     break;
 
                 case MenuLevel.OperationActions:
                     sb.AppendLine($"{operationActions[operationActionIndex]}");
                     sb.AppendLine($"Action {operationActionIndex + 1} of {operationActions.Count}");
-                    sb.AppendLine("Press Enter to execute, Escape to go back");
+                    sb.AppendLine("Press Enter to execute");
                     break;
 
                 case MenuLevel.AddOperationList:
@@ -769,7 +767,7 @@ namespace RimWorldAccess
                             sb.AppendLine($"Unavailable: {op.UnavailableReason}");
                         }
                         sb.AppendLine($"Operation {operationIndex + 1} of {availableOperations.Count}");
-                        sb.AppendLine("Press Enter to add, Escape to go back");
+                        sb.AppendLine("Press Enter to add");
                     }
                     break;
 
@@ -797,7 +795,7 @@ namespace RimWorldAccess
                         }
 
                         sb.AppendLine($"Recipe {recipeIndex + 1} of {availableRecipes.Count}");
-                        sb.AppendLine("Press Enter to select, Escape to go back");
+                        sb.AppendLine("Press Enter to select");
                     }
                     break;
 
@@ -814,7 +812,7 @@ namespace RimWorldAccess
                         sb.AppendLine($"Health: {health:F0} / {maxHealth:F0}");
 
                         sb.AppendLine($"Part {partSelectionIndex + 1} of {partsForRecipe.Count}");
-                        sb.AppendLine("Press Enter to add operation, Escape to go back");
+                        sb.AppendLine("Press Enter to add operation");
                     }
                     break;
 
@@ -829,7 +827,7 @@ namespace RimWorldAccess
                         }
                         sb.AppendLine($"Conditions: {part.Hediffs.Count}");
                         sb.AppendLine($"Part {bodyPartIndex + 1} of {bodyParts.Count}");
-                        sb.AppendLine("Press Enter to view conditions, Escape to go back");
+                        sb.AppendLine("Press Enter to view conditions");
                     }
                     break;
 
@@ -842,7 +840,7 @@ namespace RimWorldAccess
                             var hediff = part.Hediffs[hediffIndex];
                             sb.AppendLine($"{hediff.Label}");
                             sb.AppendLine($"Condition {hediffIndex + 1} of {part.Hediffs.Count} on {part.Label}");
-                            sb.AppendLine("Press Enter for details, Escape to go back");
+                            sb.AppendLine("Press Enter for details");
                         }
                     }
                     break;
@@ -855,8 +853,6 @@ namespace RimWorldAccess
                         {
                             var hediff = part.Hediffs[hediffIndex];
                             sb.AppendLine(hediff.DetailedInfo);
-                            sb.AppendLine();
-                            sb.AppendLine("Press Escape to go back");
                         }
                     }
                     break;
