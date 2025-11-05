@@ -57,118 +57,24 @@ namespace RimWorldAccess
                     if (hediff.Visible)
                     {
                         string bodyPart = hediff.Part != null ? $" on {hediff.Part.Label}" : "";
-                        sb.Append($"  - {hediff.LabelCap}{bodyPart}");
+                        sb.AppendLine($"  - {hediff.LabelCap}{bodyPart}");
 
-                        // Get capacity modifiers directly from the hediff (show mechanical effects FIRST)
-                        var capMods = hediff.CapMods;
-                        var effects = new List<string>();
+                        // Get comprehensive effects using the helper method
+                        string effects = HealthTabHelper.GetComprehensiveHediffEffects(hediff, pawn);
 
-                        if (capMods != null && capMods.Any())
+                        if (!string.IsNullOrEmpty(effects))
                         {
-                            foreach (var capMod in capMods)
+                            // Split effects into lines and indent each one
+                            string[] effectLines = effects.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                            foreach (string line in effectLines)
                             {
-                                if (capMod.capacity != null)
+                                string trimmedLine = line.Trim();
+                                if (!string.IsNullOrEmpty(trimmedLine))
                                 {
-                                    string effect = capMod.capacity.LabelCap;
-
-                                    // Add the modifier details
-                                    if (capMod.offset != 0)
-                                    {
-                                        effect += $" {capMod.offset:+0.##;-0.##}";
-                                    }
-                                    if (capMod.postFactor != 1f)
-                                    {
-                                        effect += $" x{capMod.postFactor:0.##}";
-                                    }
-                                    if (capMod.SetMaxDefined)
-                                    {
-                                        float setMax = capMod.EvaluateSetMax(pawn);
-                                        effect += $" (max {setMax:P0})";
-                                    }
-
-                                    effects.Add(effect);
+                                    sb.AppendLine($"      {trimmedLine}");
                                 }
                             }
                         }
-                        // For injuries to body parts WITHOUT direct capacity modifiers,
-                        // calculate the part efficiency impact
-                        else if (hediff.Part != null)
-                        {
-                            // Calculate part efficiency
-                            float partHealth = pawn.health.hediffSet.GetPartHealth(hediff.Part);
-                            float maxHealth = hediff.Part.def.GetMaxHealth(pawn);
-                            float currentEfficiency = partHealth / maxHealth;
-
-                            // Only show if there's a meaningful impact (less than 100%)
-                            if (currentEfficiency < 0.999f)
-                            {
-                                // Get the body part tags to determine which capacities it affects
-                                var affectedCapacities = new List<string>();
-
-                                // Check common capacity-related tags
-                                if (hediff.Part.def.tags != null)
-                                {
-                                    foreach (var tag in hediff.Part.def.tags)
-                                    {
-                                        // Map body part tags to capacity names
-                                        if (tag.defName == "SightSource")
-                                        {
-                                            affectedCapacities.Add($"Sight (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "HearingSource")
-                                        {
-                                            affectedCapacities.Add($"Hearing (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "MovingLimbCore")
-                                        {
-                                            affectedCapacities.Add($"Moving (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "ManipulationLimbCore" || tag.defName == "ManipulationLimbSegment" || tag.defName == "ManipulationLimbDigit")
-                                        {
-                                            affectedCapacities.Add($"Manipulation (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "TalkingSource")
-                                        {
-                                            affectedCapacities.Add($"Talking (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "EatingSource")
-                                        {
-                                            affectedCapacities.Add($"Eating (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "BreathingSource")
-                                        {
-                                            affectedCapacities.Add($"Breathing (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "ConsciousnessSource")
-                                        {
-                                            affectedCapacities.Add($"Consciousness (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "BloodPumpingSource")
-                                        {
-                                            affectedCapacities.Add($"Blood Pumping (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "BloodFiltrationSource")
-                                        {
-                                            affectedCapacities.Add($"Blood Filtration (part at {currentEfficiency:P0})");
-                                        }
-                                        else if (tag.defName == "MetabolismSource")
-                                        {
-                                            affectedCapacities.Add($"Metabolism (part at {currentEfficiency:P0})");
-                                        }
-                                    }
-                                }
-
-                                effects.AddRange(affectedCapacities);
-                            }
-                        }
-
-                        // Show mechanical effects
-                        if (effects.Any())
-                        {
-                            sb.Append(". Affects: " + string.Join(", ", effects));
-                        }
-
-                        sb.AppendLine();
                     }
                 }
             }
