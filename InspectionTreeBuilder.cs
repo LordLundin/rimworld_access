@@ -899,26 +899,338 @@ namespace RimWorldAccess
             };
             parentItem.Children.Add(healthSettingsItem);
 
-            // Add health information as detail text
-            string healthInfo = InspectionInfoHelper.GetCategoryInfo(pawn, "Health");
-            if (!string.IsNullOrEmpty(healthInfo))
+            // Add overall health state
+            var stateItem = new InspectionTreeItem
             {
-                healthInfo = healthInfo.StripTags();
-                var lines = healthInfo.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                Type = InspectionTreeItem.ItemType.DetailText,
+                Label = $"State: {pawn.health.State}",
+                IndentLevel = parentItem.IndentLevel + 1,
+                IsExpandable = false
+            };
+            parentItem.Children.Add(stateItem);
 
-                foreach (var line in lines)
+            // Add bleeding info if applicable
+            if (pawn.health.hediffSet.BleedRateTotal > 0.01f)
+            {
+                var bleedingItem = new InspectionTreeItem
                 {
-                    if (string.IsNullOrWhiteSpace(line))
-                        continue;
+                    Type = InspectionTreeItem.ItemType.DetailText,
+                    Label = $"BLEEDING: {pawn.health.hediffSet.BleedRateTotal:F2} per day",
+                    IndentLevel = parentItem.IndentLevel + 1,
+                    IsExpandable = false
+                };
+                parentItem.Children.Add(bleedingItem);
+            }
 
-                    var detailItem = new InspectionTreeItem
+            // Add pain level if applicable
+            float painTotal = pawn.health.hediffSet.PainTotal;
+            if (painTotal > 0.01f)
+            {
+                var painItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.DetailText,
+                    Label = $"Pain: {painTotal:P0}",
+                    IndentLevel = parentItem.IndentLevel + 1,
+                    IsExpandable = false
+                };
+                parentItem.Children.Add(painItem);
+            }
+
+            // Add Conditions as expandable subcategory
+            var hediffs = pawn.health.hediffSet.hediffs;
+            if (hediffs != null && hediffs.Count > 0)
+            {
+                int visibleHediffCount = hediffs.Count(h => h.Visible);
+
+                var conditionsItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.SubCategory,
+                    Label = $"Conditions ({visibleHediffCount})",
+                    Data = pawn,
+                    IndentLevel = parentItem.IndentLevel + 1,
+                    IsExpandable = true,
+                    IsExpanded = false
+                };
+                conditionsItem.OnActivate = () => BuildConditionsChildren(conditionsItem, pawn);
+                parentItem.Children.Add(conditionsItem);
+            }
+            else
+            {
+                var noConditionsItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.DetailText,
+                    Label = "No injuries or conditions",
+                    IndentLevel = parentItem.IndentLevel + 1,
+                    IsExpandable = false
+                };
+                parentItem.Children.Add(noConditionsItem);
+            }
+
+            // Add key capacities
+            if (pawn.health.capacities != null)
+            {
+                var capacitiesItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.SubCategory,
+                    Label = "Capacities",
+                    Data = pawn,
+                    IndentLevel = parentItem.IndentLevel + 1,
+                    IsExpandable = true,
+                    IsExpanded = false
+                };
+                capacitiesItem.OnActivate = () => BuildCapacitiesChildren(capacitiesItem, pawn);
+                parentItem.Children.Add(capacitiesItem);
+            }
+        }
+
+        /// <summary>
+        /// Builds children for Conditions subcategory, grouping hediffs by body part.
+        /// </summary>
+        private static void BuildConditionsChildren(InspectionTreeItem parentItem, Pawn pawn)
+        {
+            if (parentItem.Children.Count > 0)
+                return; // Already built
+
+            var hediffs = pawn.health.hediffSet.hediffs.Where(h => h.Visible).ToList();
+
+            // Group hediffs by body part (null for whole-body conditions)
+            var hediffsByPart = hediffs.GroupBy(h => h.Part).OrderBy(g => g.Key == null ? 0 : 1);
+
+            foreach (var group in hediffsByPart)
+            {
+                var part = group.Key;
+                var partHediffs = group.ToList();
+
+                // Build label for this body part with health info and condition count
+                string label;
+                if (part == null)
+                {
+                    // Whole-body conditions (no specific body part)
+                    label = $"Whole body : Conditions: {partHediffs.Count}";
+                }
+                else
+                {
+                    // Get part health
+                    float partHealth = pawn.health.hediffSet.GetPartHealth(part);
+                    float maxHealth = part.def.GetMaxHealth(pawn);
+
+                    label = $"{part.LabelCap} : Health: {partHealth:F0} / {maxHealth:F0} : Conditions: {partHediffs.Count}";
+                }
+
+                var bodyPartItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.Item,
+                    Label = label,
+                    Data = new { Pawn = pawn, BodyPart = part, Hediffs = partHediffs },
+                    IndentLevel = parentItem.IndentLevel + 1,
+                    IsExpandable = true,
+                    IsExpanded = false
+                };
+
+                bodyPartItem.OnActivate = () => BuildBodyPartConditionsChildren(bodyPartItem, pawn, part, partHediffs);
+                parentItem.Children.Add(bodyPartItem);
+            }
+        }
+
+        /// <summary>
+        /// Builds children showing individual conditions for a specific body part.
+        /// </summary>
+        private static void BuildBodyPartConditionsChildren(InspectionTreeItem bodyPartItem, Pawn pawn, BodyPartRecord part, List<Hediff> hediffs)
+        {
+            if (bodyPartItem.Children.Count > 0)
+                return; // Already built
+
+            foreach (var hediff in hediffs)
+            {
+                // Get hediff label
+                string hediffLabel = hediff.LabelCap.StripTags();
+
+                var hediffItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.Item,
+                    Label = hediffLabel,
+                    Data = hediff,
+                    IndentLevel = bodyPartItem.IndentLevel + 1,
+                    IsExpandable = true,
+                    IsExpanded = false
+                };
+
+                hediffItem.OnActivate = () => BuildHediffDetailChildren(hediffItem, hediff, pawn);
+                bodyPartItem.Children.Add(hediffItem);
+            }
+        }
+
+        /// <summary>
+        /// Builds detail children for a specific hediff (condition/wound).
+        /// </summary>
+        private static void BuildHediffDetailChildren(InspectionTreeItem hediffItem, Hediff hediff, Pawn pawn)
+        {
+            if (hediffItem.Children.Count > 0)
+                return; // Already built
+
+            // Get capacity modifiers (mechanical effects)
+            var capMods = hediff.CapMods;
+            var effects = new List<string>();
+
+            if (capMods != null && capMods.Any())
+            {
+                foreach (var capMod in capMods)
+                {
+                    if (capMod.capacity != null)
+                    {
+                        string effect = capMod.capacity.LabelCap;
+
+                        // Add the modifier details
+                        if (capMod.offset != 0)
+                        {
+                            effect += $" {capMod.offset:+0.##;-0.##}";
+                        }
+                        if (capMod.postFactor != 1f)
+                        {
+                            effect += $" x{capMod.postFactor:0.##}";
+                        }
+                        if (capMod.SetMaxDefined)
+                        {
+                            float setMax = capMod.EvaluateSetMax(pawn);
+                            effect += $" (max {setMax:P0})";
+                        }
+
+                        effects.Add(effect);
+                    }
+                }
+            }
+            // For injuries to body parts WITHOUT direct capacity modifiers,
+            // calculate the part efficiency impact
+            else if (hediff.Part != null)
+            {
+                // Calculate part efficiency
+                float partHealth = pawn.health.hediffSet.GetPartHealth(hediff.Part);
+                float maxHealth = hediff.Part.def.GetMaxHealth(pawn);
+                float currentEfficiency = partHealth / maxHealth;
+
+                // Only show if there's a meaningful impact (less than 100%)
+                if (currentEfficiency < 0.999f)
+                {
+                    // Get the body part tags to determine which capacities it affects
+                    if (hediff.Part.def.tags != null)
+                    {
+                        foreach (var tag in hediff.Part.def.tags)
+                        {
+                            // Map body part tags to capacity names
+                            if (tag.defName == "SightSource")
+                            {
+                                effects.Add($"Sight (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "HearingSource")
+                            {
+                                effects.Add($"Hearing (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "MovingLimbCore")
+                            {
+                                effects.Add($"Moving (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "ManipulationLimbCore" || tag.defName == "ManipulationLimbSegment" || tag.defName == "ManipulationLimbDigit")
+                            {
+                                effects.Add($"Manipulation (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "TalkingSource")
+                            {
+                                effects.Add($"Talking (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "EatingSource")
+                            {
+                                effects.Add($"Eating (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "BreathingSource")
+                            {
+                                effects.Add($"Breathing (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "ConsciousnessSource")
+                            {
+                                effects.Add($"Consciousness (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "BloodPumpingSource")
+                            {
+                                effects.Add($"Blood Pumping (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "BloodFiltrationSource")
+                            {
+                                effects.Add($"Blood Filtration (part at {currentEfficiency:P0})");
+                            }
+                            else if (tag.defName == "MetabolismSource")
+                            {
+                                effects.Add($"Metabolism (part at {currentEfficiency:P0})");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Show mechanical effects
+            if (effects.Any())
+            {
+                var effectsItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.DetailText,
+                    Label = "Affects: " + string.Join(", ", effects),
+                    IndentLevel = hediffItem.IndentLevel + 1,
+                    IsExpandable = false
+                };
+                hediffItem.Children.Add(effectsItem);
+            }
+
+            // Get description
+            string description = hediff.Description;
+            if (!string.IsNullOrEmpty(description))
+            {
+                // Strip tags, replace newlines with spaces, and collapse multiple spaces
+                description = description.StripTags().Trim();
+                description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
+
+                var descItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.DetailText,
+                    Label = description,
+                    IndentLevel = hediffItem.IndentLevel + 1,
+                    IsExpandable = false
+                };
+                hediffItem.Children.Add(descItem);
+            }
+        }
+
+        /// <summary>
+        /// Builds children for Capacities subcategory.
+        /// </summary>
+        private static void BuildCapacitiesChildren(InspectionTreeItem parentItem, Pawn pawn)
+        {
+            if (parentItem.Children.Count > 0)
+                return; // Already built
+
+            var keyCapacities = new[]
+            {
+                PawnCapacityDefOf.Consciousness,
+                PawnCapacityDefOf.Moving,
+                PawnCapacityDefOf.Manipulation,
+                PawnCapacityDefOf.Sight,
+                PawnCapacityDefOf.Hearing,
+                PawnCapacityDefOf.Talking
+            };
+
+            foreach (var capacity in keyCapacities)
+            {
+                if (capacity != null && pawn.health.capacities.CapableOf(capacity))
+                {
+                    float level = pawn.health.capacities.GetLevel(capacity);
+                    string status = $"{level:P0}";
+
+                    var capacityItem = new InspectionTreeItem
                     {
                         Type = InspectionTreeItem.ItemType.DetailText,
-                        Label = line.Trim(),
+                        Label = $"{capacity.LabelCap}: {status}",
                         IndentLevel = parentItem.IndentLevel + 1,
                         IsExpandable = false
                     };
-                    parentItem.Children.Add(detailItem);
+                    parentItem.Children.Add(capacityItem);
                 }
             }
         }
