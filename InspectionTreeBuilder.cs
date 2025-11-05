@@ -1006,7 +1006,36 @@ namespace RimWorldAccess
                 if (part == null)
                 {
                     // Whole-body conditions (no specific body part)
-                    label = $"Whole body : Conditions: {partHediffs.Count}";
+                    // Get summary of effects for whole body
+                    var effectTypes = new List<string>();
+                    bool hasBleeding = false;
+                    bool hasCapacityImpact = false;
+                    bool hasPain = false;
+                    bool hasLifeThreat = false;
+
+                    foreach (var hediff in partHediffs)
+                    {
+                        if (hediff.Bleeding)
+                            hasBleeding = true;
+                        if (hediff.PainOffset > 0.01f)
+                            hasPain = true;
+                        if (hediff.IsCurrentlyLifeThreatening)
+                            hasLifeThreat = true;
+                        if (hediff.CapMods != null && hediff.CapMods.Count > 0)
+                            hasCapacityImpact = true;
+                    }
+
+                    if (hasLifeThreat)
+                        effectTypes.Add("Life Threatening");
+                    if (hasBleeding)
+                        effectTypes.Add("Bleeding");
+                    if (hasCapacityImpact)
+                        effectTypes.Add("Reduced Capacity");
+                    if (hasPain)
+                        effectTypes.Add("Painful");
+
+                    string effectSummary = effectTypes.Count > 0 ? " : " + string.Join(", ", effectTypes) : "";
+                    label = $"Whole body : Conditions: {partHediffs.Count}{effectSummary}";
                 }
                 else
                 {
@@ -1014,7 +1043,36 @@ namespace RimWorldAccess
                     float partHealth = pawn.health.hediffSet.GetPartHealth(part);
                     float maxHealth = part.def.GetMaxHealth(pawn);
 
-                    label = $"{part.LabelCap} : Health: {partHealth:F0} / {maxHealth:F0} : Conditions: {partHediffs.Count}";
+                    // Get summary of effects for this body part
+                    var effectTypes = new List<string>();
+                    bool hasBleeding = false;
+                    bool hasCapacityImpact = false;
+                    bool hasPain = false;
+                    bool hasLifeThreat = false;
+
+                    foreach (var hediff in partHediffs)
+                    {
+                        if (hediff.Bleeding)
+                            hasBleeding = true;
+                        if (hediff.PainOffset > 0.01f)
+                            hasPain = true;
+                        if (hediff.IsCurrentlyLifeThreatening)
+                            hasLifeThreat = true;
+                        if (hediff.CapMods != null && hediff.CapMods.Count > 0)
+                            hasCapacityImpact = true;
+                    }
+
+                    if (hasLifeThreat)
+                        effectTypes.Add("Life Threatening");
+                    if (hasBleeding)
+                        effectTypes.Add("Bleeding");
+                    if (hasCapacityImpact)
+                        effectTypes.Add("Reduced Capacity");
+                    if (hasPain)
+                        effectTypes.Add("Painful");
+
+                    string effectSummary = effectTypes.Count > 0 ? " : " + string.Join(", ", effectTypes) : "";
+                    label = $"{part.LabelCap} : Health: {partHealth:F0} / {maxHealth:F0} : Conditions: {partHediffs.Count}{effectSummary}";
                 }
 
                 var bodyPartItem = new InspectionTreeItem
@@ -1062,130 +1120,55 @@ namespace RimWorldAccess
 
         /// <summary>
         /// Builds detail children for a specific hediff (condition/wound).
+        /// Shows comprehensive effects rather than raw health numbers.
         /// </summary>
         private static void BuildHediffDetailChildren(InspectionTreeItem hediffItem, Hediff hediff, Pawn pawn)
         {
             if (hediffItem.Children.Count > 0)
                 return; // Already built
 
-            // Get capacity modifiers (mechanical effects)
-            var capMods = hediff.CapMods;
-            var effects = new List<string>();
+            // Get comprehensive effect information from helper
+            string effectsText = HealthTabHelper.GetComprehensiveHediffEffects(hediff, pawn);
 
-            if (capMods != null && capMods.Any())
+            if (!string.IsNullOrEmpty(effectsText))
             {
-                foreach (var capMod in capMods)
+                // Split effects into individual lines for better navigation
+                string[] effectLines = effectsText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string line in effectLines)
                 {
-                    if (capMod.capacity != null)
+                    string trimmedLine = line.Trim();
+                    if (!string.IsNullOrEmpty(trimmedLine))
                     {
-                        string effect = capMod.capacity.LabelCap;
-
-                        // Add the modifier details
-                        if (capMod.offset != 0)
+                        var effectItem = new InspectionTreeItem
                         {
-                            effect += $" {capMod.offset:+0.##;-0.##}";
-                        }
-                        if (capMod.postFactor != 1f)
-                        {
-                            effect += $" x{capMod.postFactor:0.##}";
-                        }
-                        if (capMod.SetMaxDefined)
-                        {
-                            float setMax = capMod.EvaluateSetMax(pawn);
-                            effect += $" (max {setMax:P0})";
-                        }
-
-                        effects.Add(effect);
-                    }
-                }
-            }
-            // For injuries to body parts WITHOUT direct capacity modifiers,
-            // calculate the part efficiency impact
-            else if (hediff.Part != null)
-            {
-                // Calculate part efficiency
-                float partHealth = pawn.health.hediffSet.GetPartHealth(hediff.Part);
-                float maxHealth = hediff.Part.def.GetMaxHealth(pawn);
-                float currentEfficiency = partHealth / maxHealth;
-
-                // Only show if there's a meaningful impact (less than 100%)
-                if (currentEfficiency < 0.999f)
-                {
-                    // Get the body part tags to determine which capacities it affects
-                    if (hediff.Part.def.tags != null)
-                    {
-                        foreach (var tag in hediff.Part.def.tags)
-                        {
-                            // Map body part tags to capacity names
-                            if (tag.defName == "SightSource")
-                            {
-                                effects.Add($"Sight (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "HearingSource")
-                            {
-                                effects.Add($"Hearing (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "MovingLimbCore")
-                            {
-                                effects.Add($"Moving (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "ManipulationLimbCore" || tag.defName == "ManipulationLimbSegment" || tag.defName == "ManipulationLimbDigit")
-                            {
-                                effects.Add($"Manipulation (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "TalkingSource")
-                            {
-                                effects.Add($"Talking (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "EatingSource")
-                            {
-                                effects.Add($"Eating (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "BreathingSource")
-                            {
-                                effects.Add($"Breathing (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "ConsciousnessSource")
-                            {
-                                effects.Add($"Consciousness (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "BloodPumpingSource")
-                            {
-                                effects.Add($"Blood Pumping (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "BloodFiltrationSource")
-                            {
-                                effects.Add($"Blood Filtration (part at {currentEfficiency:P0})");
-                            }
-                            else if (tag.defName == "MetabolismSource")
-                            {
-                                effects.Add($"Metabolism (part at {currentEfficiency:P0})");
-                            }
-                        }
+                            Type = InspectionTreeItem.ItemType.DetailText,
+                            Label = trimmedLine,
+                            IndentLevel = hediffItem.IndentLevel + 1,
+                            IsExpandable = false
+                        };
+                        hediffItem.Children.Add(effectItem);
                     }
                 }
             }
 
-            // Show mechanical effects
-            if (effects.Any())
-            {
-                var effectsItem = new InspectionTreeItem
-                {
-                    Type = InspectionTreeItem.ItemType.DetailText,
-                    Label = "Affects: " + string.Join(", ", effects),
-                    IndentLevel = hediffItem.IndentLevel + 1,
-                    IsExpandable = false
-                };
-                hediffItem.Children.Add(effectsItem);
-            }
-
-            // Get description
+            // Add description at the end for context
             string description = hediff.Description;
             if (!string.IsNullOrEmpty(description))
             {
                 // Strip tags, replace newlines with spaces, and collapse multiple spaces
                 description = description.StripTags().Trim();
                 description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
+
+                // Add a separator before description
+                var separatorItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.DetailText,
+                    Label = "---",
+                    IndentLevel = hediffItem.IndentLevel + 1,
+                    IsExpandable = false
+                };
+                hediffItem.Children.Add(separatorItem);
 
                 var descItem = new InspectionTreeItem
                 {
@@ -1213,7 +1196,10 @@ namespace RimWorldAccess
                 PawnCapacityDefOf.Manipulation,
                 PawnCapacityDefOf.Sight,
                 PawnCapacityDefOf.Hearing,
-                PawnCapacityDefOf.Talking
+                PawnCapacityDefOf.Talking,
+                PawnCapacityDefOf.Breathing,
+                PawnCapacityDefOf.BloodFiltration,
+                PawnCapacityDefOf.BloodPumping
             };
 
             foreach (var capacity in keyCapacities)

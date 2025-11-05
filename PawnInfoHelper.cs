@@ -201,7 +201,10 @@ namespace RimWorldAccess
                     PawnCapacityDefOf.Manipulation,
                     PawnCapacityDefOf.Sight,
                     PawnCapacityDefOf.Hearing,
-                    PawnCapacityDefOf.Talking
+                    PawnCapacityDefOf.Talking,
+                    PawnCapacityDefOf.Breathing,
+                    PawnCapacityDefOf.BloodFiltration,
+                    PawnCapacityDefOf.BloodPumping
                 };
 
                 foreach (var capacity in keyCapacities)
