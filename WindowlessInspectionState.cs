@@ -366,15 +366,7 @@ namespace RimWorldAccess
 
                 // Build help text
                 string helpText = "";
-                if (item.IsExpandable && !item.IsExpanded)
-                {
-                    helpText = "Enter or Right arrow to expand";
-                }
-                else if (item.IsExpandable && item.IsExpanded)
-                {
-                    helpText = "Left arrow to collapse";
-                }
-                else if (item.Type == InspectionTreeItem.ItemType.Action)
+                if (item.Type == InspectionTreeItem.ItemType.Action)
                 {
                     helpText = "Enter to execute";
                 }
