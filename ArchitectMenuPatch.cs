@@ -7,7 +7,7 @@ using RimWorld;
 namespace RimWorldAccess
 {
     /// <summary>
-    /// Harmony patch to add A key for opening the accessible architect menu.
+    /// Harmony patch to add Tab key for opening the accessible architect menu.
     /// Handles category selection, tool selection, and material selection.
     /// </summary>
     [HarmonyPatch(typeof(UIRoot))]
@@ -30,12 +30,8 @@ namespace RimWorldAccess
 
             KeyCode key = Event.current.keyCode;
 
-            // Only process A key for opening the architect menu
-            if (key != KeyCode.A)
-                return;
-
-            // Don't process if Shift is held (Shift+A is reserved for assign menu)
-            if (Event.current.shift)
+            // Only process Tab key for opening the architect menu
+            if (key != KeyCode.Tab)
                 return;
 
             // Cooldown to prevent accidental double-presses
@@ -58,10 +54,6 @@ namespace RimWorldAccess
 
             // Don't process if windowless orders menu is active
             if (WindowlessFloatMenuState.IsActive)
-                return;
-
-            // Don't process if quest menu is active (A key accepts quests)
-            if (QuestMenuState.IsActive)
                 return;
 
             // If already in architect mode (but in placement), cancel back to menu

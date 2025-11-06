@@ -10,7 +10,7 @@ namespace RimWorldAccess
 {
     /// <summary>
     /// Unified Harmony patch for UIRoot.UIRootOnGUI to handle all keyboard accessibility features.
-    /// Handles: Escape key for pause menu, Enter key for building inspection/beds, ] key for colonist orders, I key for inspection menu, J key for jump menu, L key for notification menu, Q key for quest menu, Alt+M for mood info, Alt+H for health info, Alt+N for needs info, S for schedule, and all windowless menu navigation.
+    /// Handles: Escape key for pause menu, Enter key for building inspection/beds, ] key for colonist orders, I key for inspection menu, J key for jump menu, L key for notification menu, F7 key for quest menu, Alt+M for mood info, Alt+H for health info, Alt+N for needs info, F2 for schedule, F3 for assign, F6 for research, and all windowless menu navigation.
     /// Note: Dialog navigation (including research completion dialogs) is handled by DialogAccessibilityPatch.
     /// </summary>
     [HarmonyPatch(typeof(UIRoot))]
@@ -872,8 +872,8 @@ namespace RimWorldAccess
                 }
             }
 
-            // ===== PRIORITY 6.6: Open windowless schedule menu with S key =====
-            if (key == KeyCode.S)
+            // ===== PRIORITY 6.6: Open windowless schedule menu with F2 key =====
+            if (key == KeyCode.F2)
             {
                 // Only open schedule if:
                 // 1. We're in gameplay (not at main menu)
@@ -896,8 +896,8 @@ namespace RimWorldAccess
                 }
             }
 
-            // ===== PRIORITY 6.7: Open assign menu with Shift+A key =====
-            if (key == KeyCode.A && Event.current.shift)
+            // ===== PRIORITY 6.7: Open assign menu with F3 key =====
+            if (key == KeyCode.F3)
             {
                 // Only open assign menu if:
                 // 1. We're in gameplay (not at main menu)
@@ -908,7 +908,7 @@ namespace RimWorldAccess
                     (Find.WindowStack == null || !Find.WindowStack.WindowsPreventCameraMotion) &&
                     !ZoneCreationState.IsInCreationMode)
                 {
-                    // Prevent the default A key behavior (architect menu)
+                    // Prevent the default F3 key behavior
                     Event.current.Use();
 
                     // Get the selected pawn, or use first colonist if none selected
@@ -980,8 +980,8 @@ namespace RimWorldAccess
                 }
             }
 
-            // ===== PRIORITY 7.5: Open quest menu with Q key (if no menu is active and we're in-game) =====
-            if (key == KeyCode.Q)
+            // ===== PRIORITY 7.5: Open quest menu with F7 key (if no menu is active and we're in-game) =====
+            if (key == KeyCode.F7)
             {
                 // Only open quest menu if:
                 // 1. We're in gameplay (not at main menu)
@@ -992,7 +992,7 @@ namespace RimWorldAccess
                     (Find.WindowStack == null || !Find.WindowStack.WindowsPreventCameraMotion) &&
                     !ZoneCreationState.IsInCreationMode)
                 {
-                    // Prevent the default Q key behavior
+                    // Prevent the default F7 key behavior
                     Event.current.Use();
 
                     // Open the quest menu
@@ -1001,8 +1001,8 @@ namespace RimWorldAccess
                 }
             }
 
-            // ===== PRIORITY 7.55: Open research menu with P key (if no menu is active and we're in-game) =====
-            if (key == KeyCode.P)
+            // ===== PRIORITY 7.55: Open research menu with F6 key (if no menu is active and we're in-game) =====
+            if (key == KeyCode.F6)
             {
                 // Only open research menu if:
                 // 1. We're in gameplay (not at main menu)
@@ -1013,7 +1013,7 @@ namespace RimWorldAccess
                     (Find.WindowStack == null || !Find.WindowStack.WindowsPreventCameraMotion) &&
                     !ZoneCreationState.IsInCreationMode)
                 {
-                    // Prevent the default P key behavior
+                    // Prevent the default F6 key behavior
                     Event.current.Use();
 
                     // Open the research menu

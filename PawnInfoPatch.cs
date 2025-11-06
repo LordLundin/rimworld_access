@@ -6,7 +6,7 @@ using RimWorld;
 namespace RimWorldAccess
 {
     /// <summary>
-    /// Harmony patch for handling Alt+key combinations to read pawn information.
+    /// Harmony patch for handling F1 (work menu) and Alt+key combinations to read pawn information.
     /// Provides hotkeys for jumping to selected pawn and reading various pawn attributes.
     /// Patches UIRootOnGUI to intercept events at the UI layer and consume them.
     /// </summary>
@@ -37,24 +37,19 @@ namespace RimWorldAccess
             if (WorkMenuState.IsActive)
                 return;
 
-            // Check if Alt key is pressed
-            bool altPressed = Event.current.alt;
-            if (!altPressed)
-                return;
-
-            bool handled = false;
             KeyCode key = Event.current.keyCode;
+            bool handled = false;
 
-            // Handle Alt+C: Jump to selected pawn
-            if (key == KeyCode.C)
-            {
-                HandleJumpToSelectedPawn();
-                handled = true;
-            }
-            // Handle Alt+W: Work menu (interactive)
-            else if (key == KeyCode.W)
+            // Handle F1: Work menu (interactive) - matches RimWorld default
+            if (key == KeyCode.F1)
             {
                 HandleWorkMenu();
+                handled = true;
+            }
+            // Handle Alt+C: Jump to selected pawn
+            else if (key == KeyCode.C && Event.current.alt)
+            {
+                HandleJumpToSelectedPawn();
                 handled = true;
             }
             // Note: Alt+H, Alt+N, Alt+G, Alt+S, Alt+T, Alt+R shortcuts have been removed.
