@@ -141,6 +141,12 @@ namespace RimWorldAccess
                     () => WindowlessOptionsMenuState.Open()
                 ));
 
+                // Play Settings (auto-rebuild, auto-expand home area)
+                options.Add(new PauseMenuOption(
+                    "Play Settings",
+                    () => PlaySettingsMenuState.Open()
+                ));
+
                 // Quit options for permadeath mode
                 if (isPermadeath && canSave)
                 {

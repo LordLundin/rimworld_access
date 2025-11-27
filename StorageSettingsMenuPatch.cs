@@ -5,7 +5,7 @@ using Verse;
 namespace RimWorldAccess
 {
     /// <summary>
-    /// Harmony patch to handle keyboard input for storage settings and plant selection menus.
+    /// Harmony patch to handle keyboard input for zone-related menus: zone settings, play settings, storage settings, and plant selection.
     /// Intercepts keyboard events when these menus are active.
     /// </summary>
     [HarmonyPatch(typeof(UIRoot))]
@@ -16,9 +16,30 @@ namespace RimWorldAccess
         [HarmonyPriority(Priority.VeryHigh)] // Run before other patches
         public static void Prefix()
         {
-            // Only process keyboard events
+            // Handle zone rename text input (process both KeyDown and normal character input)
+            if (ZoneRenameState.IsActive)
+            {
+                HandleZoneRenameInput();
+                return;
+            }
+
+            // Only process keyboard events for other menus
             if (Event.current.type != EventType.KeyDown)
                 return;
+
+            // Handle zone settings menu
+            if (ZoneSettingsMenuState.IsActive)
+            {
+                HandleZoneSettingsInput();
+                return;
+            }
+
+            // Handle play settings menu
+            if (PlaySettingsMenuState.IsActive)
+            {
+                HandlePlaySettingsInput();
+                return;
+            }
 
             // Handle storage settings menu
             if (StorageSettingsMenuState.IsActive)
@@ -154,6 +175,114 @@ namespace RimWorldAccess
                     TolkHelper.Speak("Closed plant selection menu");
                     Event.current.Use();
                     break;
+            }
+        }
+
+        private static void HandleZoneSettingsInput()
+        {
+            KeyCode key = Event.current.keyCode;
+
+            switch (key)
+            {
+                case KeyCode.UpArrow:
+                    ZoneSettingsMenuState.SelectPrevious();
+                    Event.current.Use();
+                    break;
+
+                case KeyCode.DownArrow:
+                    ZoneSettingsMenuState.SelectNext();
+                    Event.current.Use();
+                    break;
+
+                case KeyCode.Return:
+                case KeyCode.KeypadEnter:
+                    ZoneSettingsMenuState.ExecuteSelected();
+                    Event.current.Use();
+                    break;
+
+                case KeyCode.Escape:
+                    ZoneSettingsMenuState.Close();
+                    TolkHelper.Speak("Closed zone settings menu");
+                    Event.current.Use();
+                    break;
+            }
+        }
+
+        private static void HandlePlaySettingsInput()
+        {
+            KeyCode key = Event.current.keyCode;
+
+            switch (key)
+            {
+                case KeyCode.UpArrow:
+                    PlaySettingsMenuState.SelectPrevious();
+                    Event.current.Use();
+                    break;
+
+                case KeyCode.DownArrow:
+                    PlaySettingsMenuState.SelectNext();
+                    Event.current.Use();
+                    break;
+
+                case KeyCode.Return:
+                case KeyCode.KeypadEnter:
+                    PlaySettingsMenuState.ExecuteSelected();
+                    Event.current.Use();
+                    break;
+
+                case KeyCode.Escape:
+                    PlaySettingsMenuState.Close();
+                    TolkHelper.Speak("Closed play settings menu");
+                    Event.current.Use();
+                    break;
+            }
+        }
+
+        private static void HandleZoneRenameInput()
+        {
+            Event currentEvent = Event.current;
+
+            // Handle KeyDown events for special keys
+            if (currentEvent.type == EventType.KeyDown)
+            {
+                KeyCode key = currentEvent.keyCode;
+
+                // Check for special keys first
+                if (key == KeyCode.Return || key == KeyCode.KeypadEnter)
+                {
+                    ZoneRenameState.Confirm();
+                    currentEvent.Use();
+                    return;
+                }
+                else if (key == KeyCode.Escape)
+                {
+                    ZoneRenameState.Cancel();
+                    currentEvent.Use();
+                    return;
+                }
+                else if (key == KeyCode.Backspace)
+                {
+                    ZoneRenameState.HandleBackspace();
+                    currentEvent.Use();
+                    return;
+                }
+                else if (key == KeyCode.Tab)
+                {
+                    ZoneRenameState.ReadCurrentText();
+                    currentEvent.Use();
+                    return;
+                }
+
+                // Handle character input from KeyDown event
+                char character = currentEvent.character;
+
+                // If there's a valid character, handle it
+                if (character != '\0' && !char.IsControl(character))
+                {
+                    ZoneRenameState.HandleCharacter(character);
+                    currentEvent.Use();
+                    return;
+                }
             }
         }
     }

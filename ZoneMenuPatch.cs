@@ -91,47 +91,13 @@ namespace RimWorldAccess
         }
 
         /// <summary>
-        /// Opens the settings menu for a zone (windowless version).
+        /// Opens the unified zone settings menu for any zone type.
         /// </summary>
         private static void OpenZoneSettings(Zone zone)
         {
-            // Check zone type and open appropriate menu
-            if (zone is Zone_Stockpile stockpile)
-            {
-                // Open storage settings menu
-                StorageSettings settings = stockpile.GetStoreSettings();
-                if (settings != null)
-                {
-                    StorageSettingsMenuState.Open(settings);
-                    TolkHelper.Speak($"Storage settings for {zone.label}");
-                    MelonLoader.MelonLogger.Msg($"Opened storage settings for: {zone.label}");
-                }
-                else
-                {
-                    TolkHelper.Speak($"Cannot access settings for {zone.label}", SpeechPriority.High);
-                }
-            }
-            else if (zone is Zone_Growing growingZone)
-            {
-                // Open plant selection menu
-                PlantSelectionMenuState.Open(growingZone);
-                TolkHelper.Speak($"Plant selection for {zone.label}");
-                MelonLoader.MelonLogger.Msg($"Opened plant selection for: {zone.label}");
-            }
-            else
-            {
-                // For other zone types, fall back to inspect panel
-                Find.Selector.ClearSelection();
-                Find.Selector.Select(zone);
-
-                if (Find.MainTabsRoot != null)
-                {
-                    Find.MainTabsRoot.SetCurrentTab(MainButtonDefOf.Inspect, playSound: false);
-                }
-
-                TolkHelper.Speak($"Opening settings for {zone.label}");
-                MelonLoader.MelonLogger.Msg($"Opened settings for zone: {zone.label}");
-            }
+            // Open unified zone settings menu for all zone types
+            ZoneSettingsMenuState.Open(zone);
+            MelonLoader.MelonLogger.Msg($"Opened zone settings menu for: {zone.label}");
         }
 
         /// <summary>

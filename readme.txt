@@ -402,11 +402,19 @@ Tiles announce: biome, hilliness, temperature, and any settlements/objects prese
 Example: "Temperate forest, Small hills, 18°C, Trading Post (Empire, Ally)"
 
 Important Notes:
-- Map-specific keys are disabled in world view (A for architect, Z for zones, etc.)
-- Scanner keys (Page Up/Down, Home, End) work differently in world view
-- Arrow keys navigate world tiles instead of map tiles
+- Map-specific keys are disabled in world view (Tab for architect, Z for zones, etc.)
 - Press F8 or Escape to return to map view
 
+Carvan formation:
+C opens the caravan formation dialogue.
+Left and right arrow changes between tabs, up and down navigates in the item list.
+Enter selects a pawn/increases an item quantity.
++ or - increase item quantities.
+D sets caravan destination.
+T sends caravan.
+Shift+c on a temp map I.E caravan ambush, reforms the caravan.
+, and .: Cycle between caravans on the map.
+]: gives order on a selected tile.
 
 COLONY INVENTORY MENU (Press I / Shift+i)
 ------------------------------------------

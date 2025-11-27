@@ -34,6 +34,7 @@ namespace RimWorldAccess
         private static ZoneType selectedZoneType = ZoneType.Stockpile;
         private static ZoneCreationMode currentMode = ZoneCreationMode.Manual;
         private static List<IntVec3> selectedCells = new List<IntVec3>();
+        private static Zone expandingZone = null; // Track zone being expanded
 
         /// <summary>
         /// Whether zone creation mode is currently active.
@@ -126,10 +127,66 @@ namespace RimWorldAccess
         }
 
         /// <summary>
+        /// Enters expansion mode for an existing zone.
+        /// Pre-selects all existing zone tiles and allows adding/removing tiles using standard zone creation controls.
+        /// </summary>
+        public static void EnterExpansionMode(Zone zone)
+        {
+            if (zone == null)
+            {
+                TolkHelper.Speak("Cannot expand: no zone provided", SpeechPriority.High);
+                MelonLoader.MelonLogger.Error("EnterExpansionMode called with null zone");
+                return;
+            }
+
+            isInCreationMode = true;
+            expandingZone = zone;
+            currentMode = ZoneCreationMode.Manual;
+            selectedCells.Clear();
+
+            // Pre-select all existing zone tiles
+            foreach (IntVec3 cell in zone.Cells)
+            {
+                selectedCells.Add(cell);
+            }
+
+            // Determine zone type for future reference (not used in expansion, but kept for consistency)
+            if (zone is Zone_Stockpile stockpile)
+            {
+                // Check if it's a dumping stockpile by checking settings
+                if (stockpile.settings.Priority == StoragePriority.Unstored)
+                {
+                    selectedZoneType = ZoneType.DumpingStockpile;
+                }
+                else
+                {
+                    selectedZoneType = ZoneType.Stockpile;
+                }
+            }
+            else if (zone is Zone_Growing)
+            {
+                selectedZoneType = ZoneType.GrowingZone;
+            }
+
+            string instructions = "Press Space to toggle tiles, Enter to confirm, Escape to cancel. Use Shift+arrows to auto-select to wall";
+            TolkHelper.Speak($"Expanding {zone.label}. {selectedCells.Count} tiles currently selected. {instructions}");
+            MelonLoader.MelonLogger.Msg($"Entered expansion mode for zone: {zone.label}. Pre-selected {selectedCells.Count} existing tiles");
+        }
+
+        /// <summary>
         /// Creates the zone with all selected cells and exits creation mode.
+        /// If in expansion mode, adds cells to existing zone instead.
         /// </summary>
         public static void CreateZone(Map map)
         {
+            // Handle expansion mode
+            if (expandingZone != null)
+            {
+                ExpandZone(map);
+                return;
+            }
+
+            // Normal zone creation
             if (selectedCells.Count == 0)
             {
                 TolkHelper.Speak("No cells selected. Zone not created.");
@@ -190,6 +247,94 @@ namespace RimWorldAccess
             {
                 TolkHelper.Speak($"Error creating zone: {ex.Message}", SpeechPriority.High);
                 MelonLoader.MelonLogger.Error($"Error creating zone: {ex}");
+            }
+            finally
+            {
+                Reset();
+            }
+        }
+
+        /// <summary>
+        /// Updates the expanding zone based on selected cells (adds new cells, removes deselected cells).
+        /// </summary>
+        private static void ExpandZone(Map map)
+        {
+            if (expandingZone == null)
+            {
+                TolkHelper.Speak("Error: No zone to expand", SpeechPriority.High);
+                MelonLoader.MelonLogger.Error("ExpandZone called but expandingZone is null");
+                Reset();
+                return;
+            }
+
+            if (selectedCells.Count == 0)
+            {
+                TolkHelper.Speak("All cells removed. Zone deleted.");
+                expandingZone.Delete();
+                Reset();
+                return;
+            }
+
+            try
+            {
+                int addedCount = 0;
+                int removedCount = 0;
+
+                // Build a set of selected cells for quick lookup
+                HashSet<IntVec3> selectedSet = new HashSet<IntVec3>(selectedCells);
+
+                // Remove cells that are in the zone but not in the selection
+                List<IntVec3> cellsToRemove = new List<IntVec3>();
+                foreach (IntVec3 cell in expandingZone.Cells)
+                {
+                    if (!selectedSet.Contains(cell))
+                    {
+                        cellsToRemove.Add(cell);
+                    }
+                }
+
+                foreach (IntVec3 cell in cellsToRemove)
+                {
+                    expandingZone.RemoveCell(cell);
+                    removedCount++;
+                }
+
+                // Add cells that are selected but not in the zone
+                foreach (IntVec3 cell in selectedCells)
+                {
+                    if (cell.InBounds(map) && !expandingZone.ContainsCell(cell))
+                    {
+                        expandingZone.AddCell(cell);
+                        addedCount++;
+                    }
+                }
+
+                // Build feedback message
+                string message = $"Updated {expandingZone.label}: ";
+                if (addedCount > 0 && removedCount > 0)
+                {
+                    message += $"added {addedCount}, removed {removedCount} cells";
+                }
+                else if (addedCount > 0)
+                {
+                    message += $"added {addedCount} cells";
+                }
+                else if (removedCount > 0)
+                {
+                    message += $"removed {removedCount} cells";
+                }
+                else
+                {
+                    message += "no changes";
+                }
+
+                TolkHelper.Speak(message);
+                MelonLoader.MelonLogger.Msg($"Expanded zone {expandingZone.label}: added {addedCount}, removed {removedCount} cells");
+            }
+            catch (System.Exception ex)
+            {
+                TolkHelper.Speak($"Error expanding zone: {ex.Message}", SpeechPriority.High);
+                MelonLoader.MelonLogger.Error($"Error expanding zone: {ex}");
             }
             finally
             {
@@ -413,6 +558,7 @@ namespace RimWorldAccess
         {
             isInCreationMode = false;
             selectedCells.Clear();
+            expandingZone = null;
         }
 
         /// <summary>

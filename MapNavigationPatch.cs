@@ -34,6 +34,9 @@ namespace RimWorldAccess
                 WindowlessConfirmationState.IsActive ||
                 WindowlessDeleteConfirmationState.IsActive ||
                 WindowlessOptionsMenuState.IsActive ||
+                ZoneSettingsMenuState.IsActive ||
+                ZoneRenameState.IsActive ||
+                PlaySettingsMenuState.IsActive ||
                 StorageSettingsMenuState.IsActive ||
                 PlantSelectionMenuState.IsActive ||
                 RangeEditMenuState.IsActive ||

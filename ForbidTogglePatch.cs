@@ -37,6 +37,10 @@ namespace RimWorldAccess
             if (WindowlessFloatMenuState.IsActive)
                 return;
 
+            // Don't process if zone rename is active (need to capture text input)
+            if (ZoneRenameState.IsActive)
+                return;
+
             // Check for F key press (but not Alt+F, which is handled by UnifiedKeyboardPatch)
             if (Input.GetKeyDown(KeyCode.F) && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
             {

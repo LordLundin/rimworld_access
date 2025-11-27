@@ -33,8 +33,14 @@ namespace RimWorldAccess
                     displayText += $" (Min Skill: {def.plant.sowMinSkill})";
                 }
 
-                // Build detailed info with growth time and yield
+                // Build detailed info with game description and stats
                 List<string> details = new List<string>();
+
+                // Add the game's description if available
+                if (!string.IsNullOrEmpty(def.description))
+                {
+                    details.Add(def.description);
+                }
 
                 // Skill requirement
                 if (def.plant.sowMinSkill > 0)
@@ -105,7 +111,7 @@ namespace RimWorldAccess
                     details.Add("Cave plant - requires darkness");
                 }
 
-                detailedInfo = string.Join(", ", details);
+                detailedInfo = string.Join(". ", details);
             }
         }
 
@@ -156,8 +162,10 @@ namespace RimWorldAccess
 
             // Find currently selected plant
             ThingDef currentPlant = settable.GetPlantDefToGrow();
+            string currentPlantName = "None";
             if (currentPlant != null)
             {
+                currentPlantName = currentPlant.LabelCap;
                 for (int i = 0; i < availablePlants.Count; i++)
                 {
                     if (availablePlants[i].plantDef == currentPlant)
@@ -168,10 +176,13 @@ namespace RimWorldAccess
                 }
             }
 
+            // Announce menu opening with current crop
+            TolkHelper.Speak($"Plant selection. Current crop: {currentPlantName}");
+
             // Announce first/current plant
             AnnounceCurrentSelection();
 
-            MelonLoader.MelonLogger.Msg($"Opened plant selection menu with {availablePlants.Count} plants");
+            MelonLoader.MelonLogger.Msg($"Opened plant selection menu with {availablePlants.Count} plants. Current: {currentPlantName}");
         }
 
         /// <summary>

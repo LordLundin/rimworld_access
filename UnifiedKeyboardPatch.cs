@@ -33,6 +33,15 @@ namespace RimWorldAccess
             if (key == KeyCode.None)
                 return;
 
+            // ===== PRIORITY -1: Block ALL keys if zone rename is active =====
+            // Zone rename needs to capture text input, so block everything here
+            // StorageSettingsMenuPatch will handle the input
+            if (ZoneRenameState.IsActive)
+            {
+                // Don't process any keys in this patch when renaming
+                return;
+            }
+
             // ===== EARLY CHECK: Skip arrow keys and Enter if Dialog_NodeTree is open =====
             // DialogAccessibilityPatch handles keyboard navigation for Dialog_NodeTree windows
             if (Find.WindowStack != null)
