@@ -50,8 +50,13 @@ namespace RimWorldAccess
         {
             if (WorldNavigationState.IsActive) return;
 
-            RefreshItems();
-            if (categories.Count == 0) return;
+            // Initialize scanner if not already done
+            if (categories.Count == 0)
+            {
+                RefreshItems();
+                if (categories.Count == 0) return;
+                AnnounceCurrentCategory();
+            }
 
             var currentSubcat = GetCurrentSubcategory();
             if (currentSubcat == null || currentSubcat.Items.Count == 0) return;
@@ -70,8 +75,13 @@ namespace RimWorldAccess
         {
             if (WorldNavigationState.IsActive) return;
 
-            RefreshItems();
-            if (categories.Count == 0) return;
+            // Initialize scanner if not already done
+            if (categories.Count == 0)
+            {
+                RefreshItems();
+                if (categories.Count == 0) return;
+                AnnounceCurrentCategory();
+            }
 
             var currentSubcat = GetCurrentSubcategory();
             if (currentSubcat == null || currentSubcat.Items.Count == 0) return;
@@ -90,8 +100,13 @@ namespace RimWorldAccess
         {
             if (WorldNavigationState.IsActive) return;
 
-            RefreshItems();
-            if (categories.Count == 0) return;
+            // Initialize scanner if not already done
+            if (categories.Count == 0)
+            {
+                RefreshItems();
+                if (categories.Count == 0) return;
+                AnnounceCurrentCategory();
+            }
 
             var currentItem = GetCurrentItem();
             if (currentItem == null || !currentItem.IsBulkGroup) return;
@@ -109,8 +124,13 @@ namespace RimWorldAccess
         {
             if (WorldNavigationState.IsActive) return;
 
-            RefreshItems();
-            if (categories.Count == 0) return;
+            // Initialize scanner if not already done
+            if (categories.Count == 0)
+            {
+                RefreshItems();
+                if (categories.Count == 0) return;
+                AnnounceCurrentCategory();
+            }
 
             var currentItem = GetCurrentItem();
             if (currentItem == null || !currentItem.IsBulkGroup) return;
@@ -240,8 +260,13 @@ namespace RimWorldAccess
         {
             if (WorldNavigationState.IsActive) return;
 
-            RefreshItems();
-            if (categories.Count == 0) return;
+            // Initialize scanner if not already done
+            if (categories.Count == 0)
+            {
+                RefreshItems();
+                if (categories.Count == 0) return;
+                AnnounceCurrentCategory();
+            }
 
             var currentItem = GetCurrentItem();
             if (currentItem == null)
@@ -250,18 +275,36 @@ namespace RimWorldAccess
                 return;
             }
 
-            // Get the actual thing to jump to (considering bulk index)
-            Thing targetThing = currentItem.Thing;
-            if (currentItem.IsBulkGroup && currentBulkIndex < currentItem.BulkCount)
+            IntVec3 targetPosition;
+
+            if (currentItem.IsTerrain)
             {
-                targetThing = currentItem.BulkThings[currentBulkIndex];
+                // For terrain, check if we're navigating bulk terrain positions
+                if (currentItem.BulkTerrainPositions != null && currentBulkIndex < currentItem.BulkTerrainPositions.Count)
+                {
+                    targetPosition = currentItem.BulkTerrainPositions[currentBulkIndex];
+                }
+                else
+                {
+                    targetPosition = currentItem.Position;
+                }
+            }
+            else
+            {
+                // Get the actual thing to jump to (considering bulk index)
+                Thing targetThing = currentItem.Thing;
+                if (currentItem.IsBulkGroup && currentBulkIndex < currentItem.BulkCount)
+                {
+                    targetThing = currentItem.BulkThings[currentBulkIndex];
+                }
+                targetPosition = targetThing.Position;
             }
 
             // Update map cursor position
-            MapNavigationState.CurrentCursorPosition = targetThing.Position;
+            MapNavigationState.CurrentCursorPosition = targetPosition;
 
             // Jump camera to position
-            Find.CameraDriver.JumpToCurrentMapLoc(targetThing.Position);
+            Find.CameraDriver.JumpToCurrentMapLoc(targetPosition);
 
             TolkHelper.Speak($"Jumped to {currentItem.Label}", SpeechPriority.Normal);
         }
@@ -270,8 +313,13 @@ namespace RimWorldAccess
         {
             if (WorldNavigationState.IsActive) return;
 
-            RefreshItems();
-            if (categories.Count == 0) return;
+            // Initialize scanner if not already done
+            if (categories.Count == 0)
+            {
+                RefreshItems();
+                if (categories.Count == 0) return;
+                AnnounceCurrentCategory();
+            }
 
             var currentItem = GetCurrentItem();
             if (currentItem == null)
@@ -280,13 +328,29 @@ namespace RimWorldAccess
                 return;
             }
 
-            // Get the actual thing (considering bulk index)
-            Thing targetThing = currentItem.Thing;
-            IntVec3 targetPos = currentItem.Position;
-            if (currentItem.IsBulkGroup && currentBulkIndex < currentItem.BulkCount)
+            IntVec3 targetPos;
+
+            if (currentItem.IsTerrain)
             {
-                targetThing = currentItem.BulkThings[currentBulkIndex];
-                targetPos = targetThing.Position;
+                // For terrain, check if we're navigating bulk terrain positions
+                if (currentItem.BulkTerrainPositions != null && currentBulkIndex < currentItem.BulkTerrainPositions.Count)
+                {
+                    targetPos = currentItem.BulkTerrainPositions[currentBulkIndex];
+                }
+                else
+                {
+                    targetPos = currentItem.Position;
+                }
+            }
+            else
+            {
+                // Get the actual thing (considering bulk index)
+                targetPos = currentItem.Position;
+                if (currentItem.IsBulkGroup && currentBulkIndex < currentItem.BulkCount)
+                {
+                    Thing targetThing = currentItem.BulkThings[currentBulkIndex];
+                    targetPos = targetThing.Position;
+                }
             }
 
             var cursorPos = MapNavigationState.CurrentCursorPosition;

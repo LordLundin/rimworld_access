@@ -439,22 +439,14 @@ namespace RimWorldAccess
         }
 
         /// <summary>
-        /// Cancels the current operation and returns to the previous state or exits.
+        /// Cancels the current operation and fully exits architect mode.
         /// </summary>
         public static void Cancel()
         {
-            if (currentMode == ArchitectMode.PlacementMode)
-            {
-                // Return to category selection
-                TolkHelper.Speak("Placement cancelled");
-                EnterCategorySelection();
-            }
-            else
-            {
-                // Exit architect mode entirely
-                TolkHelper.Speak("Architect menu closed");
-                Reset();
-            }
+            TolkHelper.Speak("Architect menu closed");
+
+            // Always fully close architect mode
+            Reset();
         }
 
         /// <summary>

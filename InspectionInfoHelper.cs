@@ -278,6 +278,17 @@ namespace RimWorldAccess
                 sb.AppendLine(inspectString);
             }
 
+            // Add description for animals (humanlike pawns have backstories in Character category instead)
+            if (!pawn.RaceProps.Humanlike && pawn.def != null && !string.IsNullOrEmpty(pawn.def.description))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Description:");
+                string description = pawn.def.description.StripTags().Trim();
+                // Clean up whitespace
+                description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
+                sb.AppendLine(description);
+            }
+
             return sb.ToString();
         }
 
@@ -441,6 +452,17 @@ namespace RimWorldAccess
             {
                 float healthPercent = (float)building.HitPoints / building.MaxHitPoints;
                 sb.AppendLine($"Health: {healthPercent:P0} ({building.HitPoints} / {building.MaxHitPoints})");
+            }
+
+            // Add description for buildings
+            if (building.def != null && !string.IsNullOrEmpty(building.def.description))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Description:");
+                string description = building.def.description.StripTags().Trim();
+                // Clean up whitespace
+                description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
+                sb.AppendLine(description);
             }
 
             return sb.ToString();
@@ -683,6 +705,17 @@ namespace RimWorldAccess
                 sb.AppendLine(inspectString);
             }
 
+            // Add description for plants
+            if (plant.def != null && !string.IsNullOrEmpty(plant.def.description))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Description:");
+                string description = plant.def.description.StripTags().Trim();
+                // Clean up whitespace
+                description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
+                sb.AppendLine(description);
+            }
+
             return sb.ToString();
         }
 
@@ -770,6 +803,17 @@ namespace RimWorldAccess
             if (!string.IsNullOrEmpty(inspectString))
             {
                 sb.AppendLine(inspectString);
+            }
+
+            // Add description for items
+            if (thing.def != null && !string.IsNullOrEmpty(thing.def.description))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Description:");
+                string description = thing.def.description.StripTags().Trim();
+                // Clean up whitespace
+                description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
+                sb.AppendLine(description);
             }
 
             return sb.ToString();
