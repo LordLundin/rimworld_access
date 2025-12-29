@@ -672,34 +672,37 @@ namespace RimWorldAccess
         }
 
         /// <summary>
+        /// Unwraps a MinifiedThing to get the actual inner item, or returns the thing as-is.
+        /// Handles MinifiedThing and MinifiedTree (which extends MinifiedThing).
+        /// </summary>
+        private static Thing GetActualThing(Thing thing)
+        {
+            if (thing is MinifiedThing minified && minified.InnerThing != null)
+                return minified.InnerThing;
+            return thing;
+        }
+
+        /// <summary>
         /// Checks if two things are identical (same def, quality, stuff, etc.)
         /// HP differences are ignored to prevent duplicate entries for damaged items.
         /// </summary>
         private static bool AreThingsIdentical(Thing a, Thing b)
         {
-            // For MinifiedThings (uninstalled furniture), compare the inner thing
-            if (a is MinifiedThing minA && b is MinifiedThing minB)
-            {
-                if (minA.InnerThing == null || minB.InnerThing == null)
-                    return false;
-                return AreThingsIdentical(minA.InnerThing, minB.InnerThing);
-            }
-
-            // If only one is minified, they're not identical
-            if (a is MinifiedThing || b is MinifiedThing)
-                return false;
+            // Unwrap minified things to compare actual items
+            var actualA = GetActualThing(a);
+            var actualB = GetActualThing(b);
 
             // Must be the same def
-            if (a.def != b.def)
+            if (actualA.def != actualB.def)
                 return false;
 
             // Must have same stuff (material)
-            if (a.Stuff != b.Stuff)
+            if (actualA.Stuff != actualB.Stuff)
                 return false;
 
             // Check quality if applicable
-            var qualityA = a.TryGetComp<CompQuality>();
-            var qualityB = b.TryGetComp<CompQuality>();
+            var qualityA = actualA.TryGetComp<CompQuality>();
+            var qualityB = actualB.TryGetComp<CompQuality>();
 
             if (qualityA != null && qualityB != null)
             {
