@@ -768,11 +768,9 @@ namespace RimWorldAccess
             // Get sibling position
             var (position, total) = GetSiblingPosition(current);
 
-            // Get level prefix (only announced when level changes)
-            string levelPrefix = MenuHelper.GetLevelPrefix("Inventory", current.Depth);
-
-            // Build announcement: "level N. {name} {state}. {X of Y}." or "{name} {state}. {X of Y}."
-            string announcement = $"{levelPrefix}{current.Label}{stateInfo}. {MenuHelper.FormatPosition(position - 1, total)}.";
+            // Build announcement: "{name} {state}. {X of Y}. level N"
+            string levelSuffix = MenuHelper.GetLevelSuffix("Inventory", current.Depth);
+            string announcement = $"{current.Label}{stateInfo}. {MenuHelper.FormatPosition(position - 1, total)}.{levelSuffix}";
 
             TolkHelper.Speak(announcement.Trim());
         }

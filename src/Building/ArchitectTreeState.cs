@@ -90,6 +90,7 @@ namespace RimWorldAccess
             onDesignatorActivated = null;
             typeahead.ClearSearch();
             expandedCategories.Clear(); // Reset expansion state on close
+            MenuHelper.ResetLevel("Architect");
         }
 
         /// <summary>
@@ -446,14 +447,16 @@ namespace RimWorldAccess
             if (item.type == MenuItemType.Category)
             {
                 string expandState = item.isExpanded ? "expanded" : "collapsed";
-                announcement = $"{item.label}, {expandState}. {position} of {total}";
+                announcement = $"{item.label}, {expandState}. {position} of {total}.";
             }
             else
             {
-                // Designator - include parent category name for context
-                string parentName = item.parent?.label ?? "";
-                announcement = $"{item.label}. {position} of {total}";
+                // Designator
+                announcement = $"{item.label}. {position} of {total}.";
             }
+
+            // Add level suffix at the end (only announced when level changes)
+            announcement += MenuHelper.GetLevelSuffix("Architect", item.indentLevel);
 
             TolkHelper.Speak(announcement);
         }

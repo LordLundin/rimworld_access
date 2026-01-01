@@ -687,10 +687,9 @@ namespace RimWorldAccess
                 {
                     adjustedLevel = Math.Max(0, adjustedLevel - 1);
                 }
-                string levelPrefix = MenuHelper.GetLevelPrefix("Inspection", adjustedLevel);
-
-                // Build full announcement: "level N. {name} {state}. {X} of {Y}."
-                string announcement = $"{levelPrefix}{label}{stateIndicator}. {MenuHelper.FormatPosition(position - 1, total)}.";
+                // Build full announcement: "{name} {state}. {X} of {Y}. level N"
+                string levelSuffix = MenuHelper.GetLevelSuffix("Inspection", adjustedLevel);
+                string announcement = $"{label}{stateIndicator}. {MenuHelper.FormatPosition(position - 1, total)}.{levelSuffix}";
 
                 TolkHelper.Speak(announcement);
             }
