@@ -331,7 +331,7 @@ namespace RimWorldAccess
                 if (currentLevel == OptionsMenuLevel.CategoryList)
                 {
                     itemName = categories[selectedCategoryIndex].Name;
-                    TolkHelper.Speak($"Category: {itemName}, {typeahead.CurrentMatchPosition} of {typeahead.MatchCount} matches for '{typeahead.SearchBuffer}'");
+                    TolkHelper.Speak($"{itemName}, {typeahead.CurrentMatchPosition} of {typeahead.MatchCount} matches for '{typeahead.SearchBuffer}'");
                 }
                 else
                 {
@@ -350,13 +350,21 @@ namespace RimWorldAccess
             if (currentLevel == OptionsMenuLevel.CategoryList)
             {
                 string categoryName = categories[selectedCategoryIndex].Name;
-                TolkHelper.Speak($"Category: {categoryName}. {MenuHelper.FormatPosition(selectedCategoryIndex, categories.Count)}");
+                string positionPart = MenuHelper.FormatPosition(selectedCategoryIndex, categories.Count);
+                string announcement = string.IsNullOrEmpty(positionPart)
+                    ? $"{categoryName}."
+                    : $"{categoryName}. {positionPart}";
+                TolkHelper.Speak(announcement);
             }
             else // SettingsList
             {
                 var setting = categories[selectedCategoryIndex].Settings[selectedSettingIndex];
                 var currentSettings = categories[selectedCategoryIndex].Settings;
-                TolkHelper.Speak($"{setting.GetAnnouncement()}. {MenuHelper.FormatPosition(selectedSettingIndex, currentSettings.Count)}");
+                string positionPart = MenuHelper.FormatPosition(selectedSettingIndex, currentSettings.Count);
+                string announcement = string.IsNullOrEmpty(positionPart)
+                    ? $"{setting.GetAnnouncement()}."
+                    : $"{setting.GetAnnouncement()}. {positionPart}";
+                TolkHelper.Speak(announcement);
             }
         }
 
