@@ -70,6 +70,9 @@ namespace RimWorldAccess
 
             // Save all preferences when closing, like the native options dialog
             Prefs.Save();
+
+            // Save RimWorld Access settings
+            RimWorldAccessMod_Settings.Settings?.Write();
         }
 
         /// <summary>
@@ -572,6 +575,16 @@ namespace RimWorldAccess
                 dev.Settings.Add(new CheckboxSetting("Close Log Window On Escape", () => Prefs.CloseLogWindowOnEscape, v => Prefs.CloseLogWindowOnEscape = v));
                 categories.Add(dev);
             }
+
+            // RimWorld Access settings - directly editable here
+            var accessSettings = new OptionCategory("RimWorld Access");
+            accessSettings.Settings.Add(new CheckboxSetting("Wrap Navigation",
+                () => RimWorldAccessMod_Settings.Settings?.WrapNavigation ?? false,
+                v => { if (RimWorldAccessMod_Settings.Settings != null) RimWorldAccessMod_Settings.Settings.WrapNavigation = v; }));
+            accessSettings.Settings.Add(new CheckboxSetting("Announce Position",
+                () => RimWorldAccessMod_Settings.Settings?.AnnouncePosition ?? true,
+                v => { if (RimWorldAccessMod_Settings.Settings != null) RimWorldAccessMod_Settings.Settings.AnnouncePosition = v; }));
+            categories.Add(accessSettings);
 
             // Mod Settings Category - list all mods that have settings
             var modSettings = new OptionCategory("Mod Settings");
