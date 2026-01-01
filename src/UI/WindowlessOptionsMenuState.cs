@@ -166,9 +166,15 @@ namespace RimWorldAccess
             }
             else
             {
-                // Close menu and return to pause menu
+                // Close menu
                 Close();
-                WindowlessPauseMenuState.Open();
+
+                // Only return to pause menu if in-game (not at main menu)
+                if (Current.ProgramState == ProgramState.Playing)
+                {
+                    WindowlessPauseMenuState.Open();
+                }
+                // At main menu, just close - main menu navigation handles itself
             }
         }
 
