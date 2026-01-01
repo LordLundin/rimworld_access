@@ -786,7 +786,7 @@ namespace RimWorldAccess
 
             var node = flattenedNodes[selectedIndex];
             var (position, total) = GetSiblingPosition(node);
-            string prefix = MenuHelper.GetLevelPrefix("ThingFilter", node.IndentLevel);
+            string suffix = MenuHelper.GetLevelSuffix("ThingFilter", node.IndentLevel);
 
             string announcement;
 
@@ -798,33 +798,33 @@ namespace RimWorldAccess
                 case NodeType.Slider:
                     // Sliders show their current value
                     string sliderValue = GetSliderValueString(node);
-                    announcement = $"{prefix}{cleanLabel} {sliderValue}. {MenuHelper.FormatPosition(position - 1, total)}";
+                    announcement = $"{cleanLabel} {sliderValue}. {MenuHelper.FormatPosition(position - 1, total)}{suffix}";
                     break;
 
                 case NodeType.SpecialFilter:
                     // Special filters show checked state
                     string specialState = node.IsChecked ? "checked" : "not checked";
-                    announcement = $"{prefix}{cleanLabel} {specialState}. {MenuHelper.FormatPosition(position - 1, total)}";
+                    announcement = $"{cleanLabel} {specialState}. {MenuHelper.FormatPosition(position - 1, total)}{suffix}";
                     break;
 
                 case NodeType.Category:
                     // Categories show expanded/collapsed state
                     string categoryState = node.IsExpanded ? "expanded" : "collapsed";
-                    announcement = $"{prefix}{cleanLabel} {categoryState}. {MenuHelper.FormatPosition(position - 1, total)}";
+                    announcement = $"{cleanLabel} {categoryState}. {MenuHelper.FormatPosition(position - 1, total)}{suffix}";
                     break;
 
                 case NodeType.ThingDef:
                     // ThingDefs show checked state
                     string thingState = node.IsChecked ? "checked" : "not checked";
-                    announcement = $"{prefix}{cleanLabel} {thingState}. {MenuHelper.FormatPosition(position - 1, total)}";
+                    announcement = $"{cleanLabel} {thingState}. {MenuHelper.FormatPosition(position - 1, total)}{suffix}";
                     break;
 
                 case NodeType.SaveAndReturn:
-                    announcement = $"{prefix}{cleanLabel}. {MenuHelper.FormatPosition(position - 1, total)}";
+                    announcement = $"{cleanLabel}. {MenuHelper.FormatPosition(position - 1, total)}{suffix}";
                     break;
 
                 default:
-                    announcement = $"{prefix}{cleanLabel}. {MenuHelper.FormatPosition(position - 1, total)}";
+                    announcement = $"{cleanLabel}. {MenuHelper.FormatPosition(position - 1, total)}{suffix}";
                     break;
             }
 

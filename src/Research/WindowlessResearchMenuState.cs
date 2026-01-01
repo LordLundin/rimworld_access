@@ -691,11 +691,8 @@ namespace RimWorldAccess
 
             var current = flatNavigationList[currentIndex];
 
-            // Get level prefix (only announced when level changes)
-            string levelPrefix = MenuHelper.GetLevelPrefix("ResearchMenu", current.Level);
-
-            // Build announcement: "level N. {name} {state}. {X of Y}."
-            string announcement = levelPrefix + current.Label;
+            // Build announcement: "{name} {state}. {X of Y}. level N"
+            string announcement = current.Label;
 
             // Add state for expandable nodes (categories)
             if (current.Type == ResearchMenuNodeType.Category)
@@ -717,6 +714,9 @@ namespace RimWorldAccess
             }
             int siblingPosition = siblings.IndexOf(current) + 1;
             announcement += $". {MenuHelper.FormatPosition(siblingPosition - 1, siblings.Count)}.";
+
+            // Add level suffix at the end (only announced when level changes)
+            announcement += MenuHelper.GetLevelSuffix("ResearchMenu", current.Level);
 
             TolkHelper.Speak(announcement);
         }

@@ -742,9 +742,8 @@ namespace RimWorldAccess
                 // Get sibling position
                 var (position, total) = GetSiblingPosition(item);
 
-                // Build announcement in WCAG format: "[level N. ]{name} {state}. {X of Y}. {allowed}."
-                string prefix = MenuHelper.GetLevelPrefix("StorageSettings", item.indentLevel);
-                string announcement = prefix + item.label;
+                // Build announcement in WCAG format: "{name} {state}. {X of Y}. {allowed}. level N"
+                string announcement = item.label;
 
                 // Add expand/collapse state for categories
                 if (item.type == MenuItemType.Category)
@@ -762,6 +761,9 @@ namespace RimWorldAccess
                     string allowState = item.isAllowed ? "allowed" : "disallowed";
                     announcement += $". {allowState}.";
                 }
+
+                // Add level suffix at the end (only announced when level changes)
+                announcement += MenuHelper.GetLevelSuffix("StorageSettings", item.indentLevel);
 
                 TolkHelper.Speak(announcement);
             }

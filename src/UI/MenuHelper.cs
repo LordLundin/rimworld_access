@@ -21,13 +21,13 @@ namespace RimWorldAccess
         }
 
         /// <summary>
-        /// Gets level prefix if level changed. Returns "level N. " or empty string.
-        /// Call at START of announcement, not end.
+        /// Gets level suffix if level changed. Returns " level N" or empty string.
+        /// Call at END of announcement, not start.
         /// </summary>
         /// <param name="menuKey">Unique key for this menu (e.g., "StorageSettings", "ThingFilter")</param>
         /// <param name="currentLevel">0-indexed indent level</param>
         /// <param name="skipLevelOne">If true, don't announce level 1 (for menus always starting at level 1)</param>
-        public static string GetLevelPrefix(string menuKey, int currentLevel, bool skipLevelOne = true)
+        public static string GetLevelSuffix(string menuKey, int currentLevel, bool skipLevelOne = true)
         {
             int displayLevel = currentLevel + 1; // 1-indexed for users
 
@@ -44,7 +44,7 @@ namespace RimWorldAccess
             if (skipLevelOne && displayLevel == 1 && lastLevel == -1)
                 return "";
 
-            return $"level {displayLevel}. ";
+            return $" level {displayLevel}";
         }
 
         /// <summary>

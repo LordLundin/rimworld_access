@@ -457,9 +457,8 @@ namespace RimWorldAccess
             {
                 MenuItem item = menuItems[selectedIndex];
 
-                // WCAG format: "[level N. ]{name} {state}. {X of Y}"
-                string prefix = MenuHelper.GetLevelPrefix("ThingFilterMenu", item.indentLevel);
-                string announcement = prefix + item.label;
+                // WCAG format: "{name} {state}. {X of Y}. level N"
+                string announcement = item.label;
 
                 // Add expanded/collapsed state for categories
                 if (item.type == MenuItemType.Category)
@@ -471,6 +470,9 @@ namespace RimWorldAccess
                 // Add sibling position (X of Y)
                 var (position, total) = GetSiblingPosition(item);
                 announcement += $". {MenuHelper.FormatPosition(position - 1, total)}";
+
+                // Add level suffix at the end (only announced when level changes)
+                announcement += MenuHelper.GetLevelSuffix("ThingFilterMenu", item.indentLevel);
 
                 TolkHelper.Speak(announcement);
             }
