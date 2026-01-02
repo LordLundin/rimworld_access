@@ -48,7 +48,6 @@ namespace RimWorldAccess
                 || AssignMenuState.IsActive
                 || WorkMenuState.IsActive
                 || StorageSettingsMenuState.IsActive
-                || ZoneSettingsMenuState.IsActive
                 || ZoneRenameState.IsActive
                 || PlantSelectionMenuState.IsActive
                 || GizmoNavigationState.IsActive
@@ -69,11 +68,7 @@ namespace RimWorldAccess
                 || UninstallControlState.IsActive
                 || BedAssignmentState.IsActive
                 // Pawn inspection tabs
-                || CharacterTabState.IsActive
                 || HealthTabState.IsActive
-                || NeedsTabState.IsActive
-                || SocialTabState.IsActive
-                || TrainingTabState.IsActive
                 || PrisonerTabState.IsActive
                 // Filter navigation
                 || ThingFilterMenuState.IsActive

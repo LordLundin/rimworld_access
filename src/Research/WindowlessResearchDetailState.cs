@@ -937,6 +937,9 @@ namespace RimWorldAccess
             // Add level suffix at the end (only announced when level changes)
             sb.Append(MenuHelper.GetLevelSuffix("ResearchDetail", currentLevel));
 
+            // Add level suffix at the end (only announced when level changes)
+            sb.Append(MenuHelper.GetLevelSuffix("ResearchDetail", currentLevel));
+
             // For info nodes, append content after main announcement
             if (current.Type == DetailNodeType.Info && !string.IsNullOrEmpty(current.Content))
             {

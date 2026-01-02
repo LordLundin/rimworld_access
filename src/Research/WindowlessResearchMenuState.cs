@@ -719,6 +719,9 @@ namespace RimWorldAccess
             // Add level suffix at the end (only announced when level changes)
             announcement += MenuHelper.GetLevelSuffix("ResearchMenu", current.Level);
 
+            // Add level suffix at the end (only announced when level changes)
+            announcement += MenuHelper.GetLevelSuffix("ResearchMenu", current.Level);
+
             TolkHelper.Speak(announcement);
         }
     }
