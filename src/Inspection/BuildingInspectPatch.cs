@@ -6,8 +6,8 @@ using RimWorld;
 namespace RimWorldAccess
 {
     /// <summary>
-    /// Harmony patch to handle keyboard input for building inspection menus.
-    /// Intercepts keyboard events when BuildingInspectState, BillsMenuState, BillConfigState, ThingFilterMenuState, TempControlMenuState, or BedAssignmentState is active.
+    /// Harmony patch to handle keyboard input for building-related menus.
+    /// Intercepts keyboard events when BillsMenuState, BillConfigState, ThingFilterMenuState, TempControlMenuState, or BedAssignmentState is active.
     /// </summary>
     [HarmonyPatch(typeof(UIRoot))]
     [HarmonyPatch("UIRootOnGUI")]
@@ -97,51 +97,6 @@ namespace RimWorldAccess
             {
                 HandleBillsMenuInput();
                 return;
-            }
-
-            // Handle BuildingInspectState (lowest priority)
-            if (BuildingInspectState.IsActive)
-            {
-                HandleBuildingInspectInput();
-                return;
-            }
-        }
-
-        private static void HandleBuildingInspectInput()
-        {
-            KeyCode key = Event.current.keyCode;
-
-            switch (key)
-            {
-                case KeyCode.LeftArrow:
-                    BuildingInspectState.SelectPreviousTab();
-                    Event.current.Use();
-                    break;
-
-                case KeyCode.RightArrow:
-                    BuildingInspectState.SelectNextTab();
-                    Event.current.Use();
-                    break;
-
-                case KeyCode.Return:
-                case KeyCode.KeypadEnter:
-                    // Try to open building settings directly (for coolers, etc.)
-                    // If the building doesn't have direct settings, this will open the current tab
-                    BuildingInspectState.OpenBuildingSettings();
-                    Event.current.Use();
-                    break;
-
-                case KeyCode.T:
-                    // T key for opening tab-specific menus
-                    BuildingInspectState.OpenCurrentTab();
-                    Event.current.Use();
-                    break;
-
-                case KeyCode.Escape:
-                    BuildingInspectState.Close();
-                    TolkHelper.Speak("Closed building inspection");
-                    Event.current.Use();
-                    break;
             }
         }
 
@@ -329,13 +284,7 @@ namespace RimWorldAccess
                 }
                 BillConfigState.Close();
                 TolkHelper.Speak("Closed bill configuration");
-
-                // Go back to bills menu
-                if (BuildingInspectState.SelectedBuilding is IBillGiver billGiver)
-                {
-                    BillsMenuState.Open(billGiver, BuildingInspectState.SelectedBuilding.Position);
-                }
-
+                // Note: BillsMenuState stays active in background, no need to reopen
                 Event.current.Use();
                 return;
             }

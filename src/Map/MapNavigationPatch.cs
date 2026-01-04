@@ -49,7 +49,6 @@ namespace RimWorldAccess
                 WindowlessDrugPolicyState.IsActive ||
                 WindowlessAreaState.IsActive ||
                 WindowlessScheduleState.IsActive ||
-                BuildingInspectState.IsActive ||
                 BillsMenuState.IsActive ||
                 PrisonerTabState.IsActive ||
                 BillConfigState.IsActive ||

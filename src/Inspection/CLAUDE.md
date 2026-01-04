@@ -5,7 +5,7 @@ Building and object inspection UI, bills management, storage settings, and gizmo
 
 ## Files
 **Patches:** BuildingInspectPatch.cs, StorageSettingsMenuPatch.cs, GizmoNavigationPatch.cs
-**States:** BuildingInspectState.cs, WindowlessInspectionState.cs, BillsMenuState.cs, BillConfigState.cs, StorageSettingsMenuState.cs, ThingFilterMenuState.cs, ThingFilterNavigationState.cs, RangeEditMenuState.cs, GizmoNavigationState.cs, WindowlessInventoryState.cs
+**States:** WindowlessInspectionState.cs, BillsMenuState.cs, BillConfigState.cs, StorageSettingsMenuState.cs, ThingFilterMenuState.cs, ThingFilterNavigationState.cs, RangeEditMenuState.cs, GizmoNavigationState.cs, WindowlessInventoryState.cs
 **Helpers:** InspectionInfoHelper.cs, InspectionTreeBuilder.cs, InspectionTreeItem.cs, InventoryHelper.cs, PowerInfoHelper.cs
 
 ## Key Shortcuts

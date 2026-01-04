@@ -56,7 +56,6 @@ namespace RimWorldAccess
                 // Bills and building menus
                 || BillsMenuState.IsActive
                 || BillConfigState.IsActive
-                || BuildingInspectState.IsActive
                 || RangeEditMenuState.IsActive
                 || TempControlMenuState.IsActive
                 // Building component controls
