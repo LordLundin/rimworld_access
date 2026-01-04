@@ -201,6 +201,23 @@ namespace RimWorldAccess
                 return;
             }
 
+            // Handle Ctrl+Arrow for reordering bills
+            if (Event.current.control)
+            {
+                if (key == KeyCode.UpArrow)
+                {
+                    BillsMenuState.MoveUp();
+                    Event.current.Use();
+                    return;
+                }
+                if (key == KeyCode.DownArrow)
+                {
+                    BillsMenuState.MoveDown();
+                    Event.current.Use();
+                    return;
+                }
+            }
+
             // Handle Arrow Up - navigate with search awareness
             if (key == KeyCode.UpArrow)
             {
