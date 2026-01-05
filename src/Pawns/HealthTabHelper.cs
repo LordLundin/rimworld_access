@@ -21,6 +21,7 @@ namespace RimWorldAccess
         {
             public PawnCapacityDef Def { get; set; }
             public string Label { get; set; }
+            public string Description { get; set; }
             public float Level { get; set; }
             public string LevelLabel { get; set; }
             public string DetailedBreakdown { get; set; }
@@ -237,6 +238,7 @@ namespace RimWorldAccess
                 {
                     Def = capacityDef,
                     Label = label,
+                    Description = capacityDef.description ?? "",
                     Level = level,
                     LevelLabel = levelLabel,
                     DetailedBreakdown = GetCapacityBreakdown(pawn, capacityDef)
@@ -906,12 +908,24 @@ namespace RimWorldAccess
                 hasAnyEffect = true;
             }
 
-            // Permanence status - only show if already permanent
+            // Permanence status
             var permanentComp = hediff.TryGetComp<HediffComp_GetsPermanent>();
-            if (permanentComp != null && permanentComp.IsPermanent)
+            if (permanentComp != null)
             {
-                sb.AppendLine("Permanent scar");
-                hasAnyEffect = true;
+                if (permanentComp.IsPermanent)
+                {
+                    // Already permanent - show pain level
+                    float painFactor = hediff.PainOffset;
+                    string painLevel = painFactor <= 0f ? "none" : painFactor < 0.15f ? "minor" : painFactor < 0.4f ? "moderate" : "severe";
+                    sb.AppendLine($"Permanent injury (pain: {painLevel})");
+                    hasAnyEffect = true;
+                }
+                else
+                {
+                    // At risk of becoming permanent - warn the user
+                    sb.AppendLine("Warning: May become permanent scar if not fully healed");
+                    hasAnyEffect = true;
+                }
             }
 
             // Immunity progress

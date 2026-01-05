@@ -1356,51 +1356,80 @@ namespace RimWorldAccess
 
         /// <summary>
         /// Builds children for Capacities subcategory.
+        /// Uses HealthTabHelper for consistent capacity data with descriptions.
         /// </summary>
         private static void BuildCapacitiesChildren(InspectionTreeItem parentItem, Pawn pawn)
         {
             if (parentItem.Children.Count > 0)
                 return; // Already built
 
-            var keyCapacities = new[]
+            // Use HealthTabHelper for consistent capacity data (already sorted by level)
+            var capacities = HealthTabHelper.GetCapacities(pawn);
+
+            foreach (var capacity in capacities)
             {
-                PawnCapacityDefOf.Consciousness,
-                PawnCapacityDefOf.Moving,
-                PawnCapacityDefOf.Manipulation,
-                PawnCapacityDefOf.Sight,
-                PawnCapacityDefOf.Hearing,
-                PawnCapacityDefOf.Talking,
-                PawnCapacityDefOf.Breathing,
-                PawnCapacityDefOf.BloodFiltration,
-                PawnCapacityDefOf.BloodPumping
-            };
-
-            // Build list of capacities with their levels, then sort by level (lowest first)
-            var capacityLevels = new List<(PawnCapacityDef capacity, float level)>();
-            foreach (var capacity in keyCapacities)
-            {
-                if (capacity != null && pawn.health.capacities.CapableOf(capacity))
-                {
-                    float level = pawn.health.capacities.GetLevel(capacity);
-                    capacityLevels.Add((capacity, level));
-                }
-            }
-
-            // Sort by level ascending (most impaired first)
-            capacityLevels.Sort((a, b) => a.level.CompareTo(b.level));
-
-            foreach (var (capacity, level) in capacityLevels)
-            {
-                string status = $"{level:P0}";
-
                 var capacityItem = new InspectionTreeItem
                 {
-                    Type = InspectionTreeItem.ItemType.DetailText,
-                    Label = $"{capacity.LabelCap}: {status}",
+                    Type = InspectionTreeItem.ItemType.Item,
+                    Label = $"{capacity.Label}: {capacity.LevelLabel}",
+                    Data = capacity,
                     IndentLevel = parentItem.IndentLevel + 1,
+                    IsExpandable = true,
+                    IsExpanded = false
+                };
+
+                capacityItem.OnActivate = () => BuildCapacityDetailChildren(capacityItem, capacity);
+                AddChild(parentItem, capacityItem);
+            }
+        }
+
+        /// <summary>
+        /// Builds detail children for a capacity showing description and factors.
+        /// </summary>
+        private static void BuildCapacityDetailChildren(InspectionTreeItem capacityItem, HealthTabHelper.CapacityInfo capacity)
+        {
+            if (capacityItem.Children.Count > 0)
+                return; // Already built
+
+            // Add description if available
+            if (!string.IsNullOrEmpty(capacity.Description))
+            {
+                var descItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.DetailText,
+                    Label = capacity.Description,
+                    IndentLevel = capacityItem.IndentLevel + 1,
                     IsExpandable = false
                 };
-                AddChild(parentItem, capacityItem);
+                AddChild(capacityItem, descItem);
+            }
+
+            // Add breakdown factors
+            if (!string.IsNullOrEmpty(capacity.DetailedBreakdown))
+            {
+                var lines = capacity.DetailedBreakdown.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var line in lines)
+                {
+                    string trimmedLine = line.Trim();
+                    if (string.IsNullOrEmpty(trimmedLine))
+                        continue;
+
+                    // Skip header and current level (already in parent label)
+                    if (trimmedLine.EndsWith(":") && trimmedLine == $"{capacity.Label}:")
+                        continue;
+                    if (trimmedLine.StartsWith("Current level:"))
+                        continue;
+
+                    var detailItem = new InspectionTreeItem
+                    {
+                        Type = InspectionTreeItem.ItemType.DetailText,
+                        Label = trimmedLine,
+                        IndentLevel = capacityItem.IndentLevel + 1,
+                        IsExpandable = false
+                    };
+                    AddChild(capacityItem, detailItem);
+                }
             }
         }
 
