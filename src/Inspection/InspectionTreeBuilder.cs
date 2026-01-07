@@ -114,6 +114,29 @@ namespace RimWorldAccess
             {
                 AddChild(objectItem, BuildCategoryItemFromInfo(obj, categoryInfo, objectItem.IndentLevel + 1));
             }
+
+            // Add Info Card action for Things (pawns, buildings, items)
+            if (obj is Thing thing)
+            {
+                var infoCardItem = new InspectionTreeItem
+                {
+                    Type = InspectionTreeItem.ItemType.Action,
+                    Label = ConceptDefOf.InfoCard.label.CapitalizeFirst(),
+                    Data = thing,
+                    IndentLevel = objectItem.IndentLevel + 1,
+                    IsExpandable = false
+                };
+                infoCardItem.OnActivate = () =>
+                {
+                    // Close inspection menu before opening Info Card
+                    WindowlessInspectionState.Close();
+
+                    // Open the visual Dialog_InfoCard (InfoCardPatch will activate InfoCardState)
+                    var dialog = new Dialog_InfoCard(thing);
+                    Find.WindowStack.Add(dialog);
+                };
+                AddChild(objectItem, infoCardItem);
+            }
         }
 
         /// <summary>

@@ -212,21 +212,9 @@ namespace RimWorldAccess
                         });
                     }
 
-                    // Stats category for all buildings
-                    if (!categories.Any(c => c.Name == "Stats"))
-                    {
-                        categories.Add(new TabCategoryInfo
-                        {
-                            Name = "Stats",
-                            Tab = null,
-                            Handler = TabHandlerType.RichNavigation,
-                            IsKnown = true,
-                            OriginalCategoryName = "Stats"
-                        });
-                    }
                 }
 
-                // Add growth info and stats for plants
+                // Add growth info for plants
                 if (obj is Plant)
                 {
                     if (!categories.Any(c => c.Name == "Growth Info"))
@@ -240,34 +228,8 @@ namespace RimWorldAccess
                             OriginalCategoryName = "Growth Info"
                         });
                     }
-                    if (!categories.Any(c => c.Name == "Stats"))
-                    {
-                        categories.Add(new TabCategoryInfo
-                        {
-                            Name = "Stats",
-                            Tab = null,
-                            Handler = TabHandlerType.RichNavigation,
-                            IsKnown = true,
-                            OriginalCategoryName = "Stats"
-                        });
-                    }
                 }
 
-                // Items (non-building Things)
-                if (!(obj is Pawn) && !(obj is Building) && !(obj is Plant))
-                {
-                    if (!categories.Any(c => c.Name == "Quality & Stats"))
-                    {
-                        categories.Add(new TabCategoryInfo
-                        {
-                            Name = "Quality & Stats",
-                            Tab = null,
-                            Handler = TabHandlerType.RichNavigation,
-                            IsKnown = true,
-                            OriginalCategoryName = "Quality & Stats"
-                        });
-                    }
-                }
             }
 
             // Zone-specific categories
@@ -389,14 +351,11 @@ namespace RimWorldAccess
                     categories.Add(component.CategoryName);
                 }
 
-                // Add stats category for all buildings
-                categories.Add("Stats");
             }
             else if (obj is Plant plant)
             {
                 categories.Add("Overview");
                 categories.Add("Growth Info");
-                categories.Add("Stats");
             }
             else if (obj is Zone zone)
             {
@@ -414,7 +373,6 @@ namespace RimWorldAccess
             else if (obj is Thing)
             {
                 categories.Add("Overview");
-                categories.Add("Quality & Stats");
             }
 
             return categories;
@@ -731,9 +689,6 @@ namespace RimWorldAccess
                 case "Power":
                     return GetBuildingPowerInfo(building);
 
-                case "Stats":
-                    return GetBuildingStatsInfo(building);
-
                 default:
                     // Try to get info from dynamic tab using GetInspectString as fallback
                     return GetDynamicTabInfo(building, category);
@@ -882,32 +837,6 @@ namespace RimWorldAccess
             return "This building does not use power.";
         }
 
-
-        /// <summary>
-        /// Gets all stats information for a building using RimWorld's native stat system.
-        /// </summary>
-        private static string GetBuildingStatsInfo(Building building)
-        {
-            var sb = new StringBuilder();
-
-            // Get all stats using RimWorld's native stat system
-            List<StatDrawEntry> stats = StatsHelper.GetAllStats(building);
-
-            if (stats != null && stats.Count > 0)
-            {
-                // Format stats grouped by category
-                string formattedStats = StatsHelper.FormatStatsForScreenReader(stats);
-                sb.Append(formattedStats);
-            }
-            else
-            {
-                // Fallback: if no stats found, show basic info
-                sb.AppendLine("No stats available for this building.");
-            }
-
-            return sb.ToString();
-        }
-
         /// <summary>
         /// Gets bed assignment information for a bed.
         /// </summary>
@@ -991,9 +920,6 @@ namespace RimWorldAccess
                 case "Growth Info":
                     return GetPlantGrowthInfo(plant);
 
-                case "Stats":
-                    return GetPlantStatsInfo(plant);
-
                 default:
                     return "Category not found.";
             }
@@ -1046,33 +972,6 @@ namespace RimWorldAccess
 
             if (plant.HarvestableNow)
                 sb.AppendLine("Ready to harvest!");
-
-            return sb.ToString();
-        }
-
-
-
-        /// <summary>
-        /// Gets all stats information for a plant using RimWorld's native stat system.
-        /// </summary>
-        private static string GetPlantStatsInfo(Plant plant)
-        {
-            var sb = new StringBuilder();
-
-            // Get all stats using RimWorld's native stat system
-            List<StatDrawEntry> stats = StatsHelper.GetAllStats(plant);
-
-            if (stats != null && stats.Count > 0)
-            {
-                // Format stats grouped by category
-                string formattedStats = StatsHelper.FormatStatsForScreenReader(stats);
-                sb.Append(formattedStats);
-            }
-            else
-            {
-                // Fallback: if no stats found, show basic info
-                sb.AppendLine("No stats available for this plant.");
-            }
 
             return sb.ToString();
         }
@@ -1178,9 +1077,6 @@ namespace RimWorldAccess
                 case "Overview":
                     return GetThingOverview(thing);
 
-                case "Quality & Stats":
-                    return GetThingQualityInfo(thing);
-
                 default:
                     return "Category not found.";
             }
@@ -1215,48 +1111,6 @@ namespace RimWorldAccess
                 // Clean up whitespace
                 description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ");
                 sb.AppendLine(description);
-            }
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Gets quality and stats information for a thing.
-        /// Uses RimWorld's native stat system to display all relevant stats.
-        /// </summary>
-        private static string GetThingQualityInfo(Thing thing)
-        {
-            var sb = new StringBuilder();
-
-            // Quality (display at top if applicable)
-            var qualityComp = thing.TryGetComp<CompQuality>();
-            if (qualityComp != null)
-            {
-                sb.AppendLine($"Quality: {qualityComp.Quality}");
-                sb.AppendLine();
-            }
-
-            // Material (display before stats if applicable)
-            if (thing.Stuff != null)
-            {
-                sb.AppendLine($"Material: {thing.Stuff.LabelCap.ToString().StripTags()}");
-                sb.AppendLine();
-            }
-
-            // Get all stats using RimWorld's native stat system
-            List<StatDrawEntry> stats = StatsHelper.GetAllStats(thing);
-
-            if (stats != null && stats.Count > 0)
-            {
-                // Format stats grouped by category
-                string formattedStats = StatsHelper.FormatStatsForScreenReader(stats);
-                sb.Append(formattedStats);
-            }
-            else
-            {
-                // Fallback: if no stats found, show basic info
-                sb.AppendLine($"Market Value: {thing.MarketValue:F0} silver");
-                sb.AppendLine($"Mass: {thing.GetStatValue(StatDefOf.Mass):F2} kg");
             }
 
             return sb.ToString();

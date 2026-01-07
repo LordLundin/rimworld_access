@@ -106,6 +106,17 @@ namespace RimWorldAccess
                 }
             }
 
+            // ===== PRIORITY -0.25: Handle Info Card dialog if active =====
+            // Info Card is a modal dialog that should take precedence over most other handlers
+            if (InfoCardState.IsActive)
+            {
+                if (InfoCardState.HandleInput(Event.current))
+                {
+                    Event.current.Use();
+                    return;
+                }
+            }
+
             // ===== PRIORITY 0: Handle caravan stats viewer if active (must be before key blocking) =====
             // BUT: Skip if windowless dialog is active - dialogs take absolute priority
             if (CaravanStatsState.IsActive && !WindowlessDialogState.IsActive)
