@@ -40,6 +40,21 @@ namespace RimWorldAccess
         }
 
         /// <summary>
+        /// Extracts a pawn from a thing (pawn or corpse).
+        /// Returns null if the thing is neither a pawn nor a corpse with an inner pawn.
+        /// </summary>
+        private static Pawn GetPawnFromThing(object obj)
+        {
+            if (obj is Pawn pawn)
+                return pawn;
+
+            if (obj is Corpse corpse)
+                return corpse.InnerPawn;
+
+            return null;
+        }
+
+        /// <summary>
         /// Builds the root tree for all objects at a position.
         /// </summary>
         public static InspectionTreeItem BuildTree(List<object> objects)
@@ -596,7 +611,9 @@ namespace RimWorldAccess
             if (categoryItem.Children.Count > 0)
                 return; // Already built
 
-            if (!(obj is Pawn pawn))
+            // Handle Pawn-specific categories (supports both live pawns and corpses)
+            Pawn pawn = GetPawnFromThing(obj);
+            if (pawn == null)
                 return;
 
             if (category == "Gear")

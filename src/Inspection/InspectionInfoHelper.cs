@@ -387,6 +387,12 @@ namespace RimWorldAccess
 
             try
             {
+                // Extract inner pawn from corpse
+                if (obj is Corpse corpse)
+                {
+                    obj = corpse.InnerPawn;
+                }
+
                 if (obj is Pawn pawn)
                 {
                     return GetPawnCategoryInfo(pawn, category);
