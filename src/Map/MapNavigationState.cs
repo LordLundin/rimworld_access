@@ -294,7 +294,8 @@ namespace RimWorldAccess
         }
 
         /// <summary>
-        /// Jumps to the next tile with a building (wall, door, etc.) in the specified direction.
+        /// Jumps to first non-matching tile in the specified direction.
+        /// Barriers = buildings + mineables. Skips matching tiles, stops on first different type.
         /// Returns true if the position changed.
         /// </summary>
         public static bool JumpToNextBuilding(IntVec3 direction, Map map)
@@ -302,35 +303,29 @@ namespace RimWorldAccess
             if (map == null || !isInitialized)
                 return false;
 
+            bool startType = HasBarrier(currentCursorPosition, map);
             IntVec3 searchPosition = currentCursorPosition;
 
-            // Search in the specified direction until we find a building
-            // Limit search to prevent infinite loops
             int maxSteps = UnityEngine.Mathf.Max(map.Size.x, map.Size.z);
 
             for (int step = 0; step < maxSteps; step++)
             {
-                // Move one step in the direction
                 searchPosition += direction;
 
-                // Check if we're still within map bounds
                 if (!searchPosition.InBounds(map))
                 {
-                    // Hit map boundary, clamp to edge and stop
                     searchPosition.x = UnityEngine.Mathf.Clamp(searchPosition.x, 0, map.Size.x - 1);
                     searchPosition.z = UnityEngine.Mathf.Clamp(searchPosition.z, 0, map.Size.z - 1);
                     break;
                 }
 
-                // Check if this tile has a building (wall, door, or other structure)
-                if (HasRelevantBuilding(searchPosition, map))
+                if (HasBarrier(searchPosition, map) != startType)
                 {
-                    // Found a building, stop searching
+                    // Found different type, stop here
                     break;
                 }
             }
 
-            // Update position if we moved
             if (searchPosition != currentCursorPosition)
             {
                 currentCursorPosition = searchPosition;
@@ -385,6 +380,15 @@ namespace RimWorldAccess
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Checks if a tile has a barrier (building or mineable).
+        /// Used for barrier-skipping navigation.
+        /// </summary>
+        private static bool HasBarrier(IntVec3 position, Map map)
+        {
+            return HasRelevantBuilding(position, map) || HasMineableTiles(position, map);
         }
 
         /// <summary>
