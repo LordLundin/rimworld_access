@@ -459,6 +459,7 @@ namespace RimWorldAccess
                        (category == "Bed Assignment" && building is Building_Bed) ||
                        (category == "Temperature" && building.TryGetComp<CompTempControl>() != null) ||
                        (category == "Storage" && building is IStoreSettingsParent) ||
+                       (category == "Shells" && building is Building_TurretGun) ||
                        (category == "Plant Selection" && building is IPlantToGrowSettable) ||
                        BuildingComponentsHelper.GetDiscoverableComponents(building).Any(c => c.CategoryName == category && !c.IsReadOnly);
             }
@@ -558,6 +559,18 @@ namespace RimWorldAccess
                 if (settings != null)
                 {
                     StorageSettingsMenuState.Open(settings);
+                }
+            }
+            else if (category == "Shells" && building is Building_TurretGun turretGun)
+            {
+                var shellComp = turretGun.gun?.TryGetComp<CompChangeableProjectile>();
+                if (shellComp != null)
+                {
+                    var settings = shellComp.GetStoreSettings();
+                    if (settings != null)
+                    {
+                        StorageSettingsMenuState.Open(settings);
+                    }
                 }
             }
             else if (category == "Plant Selection" && building is IPlantToGrowSettable plantGrower)
