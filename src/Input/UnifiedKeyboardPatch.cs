@@ -948,6 +948,16 @@ namespace RimWorldAccess
                     WindowlessScheduleState.PasteSchedule();
                     handled = true;
                 }
+                else if (key == KeyCode.Home)
+                {
+                    WindowlessScheduleState.JumpToFirstHour();
+                    handled = true;
+                }
+                else if (key == KeyCode.End)
+                {
+                    WindowlessScheduleState.JumpToLastHour();
+                    handled = true;
+                }
 
                 if (handled)
                 {
