@@ -145,6 +145,7 @@ namespace RimWorldAccess
             { "ITab_PenBase", TabHandlerType.BasicInspectString },
             { "ITab_PenAnimals", TabHandlerType.Action },
             { "ITab_PenFood", TabHandlerType.BasicInspectString },
+            { "ITab_PenAutoCut", TabHandlerType.Action },
         };
 
         // Maps original category names used in InspectionInfoHelper to handler types
@@ -310,6 +311,7 @@ namespace RimWorldAccess
                 case "ITab_Bills": return "Bills";
                 case "ITab_Storage": return "Storage";
                 case "ITab_PenAnimals": return "Pen Animals";
+                case "ITab_PenAutoCut": return "Pen Auto-Cut";
                 default: return GetCategoryNameForTab(tab);
             }
         }

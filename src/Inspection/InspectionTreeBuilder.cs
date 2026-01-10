@@ -462,6 +462,7 @@ namespace RimWorldAccess
                        (category == "Shells" && building is Building_TurretGun) ||
                        (category == "Plant Selection" && building is IPlantToGrowSettable) ||
                        (category == "Pen Animals" && building.TryGetComp<CompAnimalPenMarker>() != null) ||
+                       (category == "Pen Auto-Cut" && building.TryGetComp<CompAnimalPenMarker>() != null) ||
                        BuildingComponentsHelper.GetDiscoverableComponents(building).Any(c => c.CategoryName == category && !c.IsReadOnly);
             }
 
@@ -584,6 +585,15 @@ namespace RimWorldAccess
                 if (penMarker != null)
                 {
                     ThingFilterMenuState.Open(penMarker.AnimalFilter, AnimalPenUtility.GetFixedAnimalFilter(), "Pen Animals");
+                }
+            }
+            else if (category == "Pen Auto-Cut")
+            {
+                var penMarker = building.TryGetComp<CompAnimalPenMarker>();
+                if (penMarker != null)
+                {
+                    var fixedFilter = penMarker.parent.Map?.animalPenManager?.GetFixedAutoCutFilter();
+                    ThingFilterMenuState.Open(penMarker.AutoCutFilter, fixedFilter, "Pen Auto-Cut");
                 }
             }
             else
