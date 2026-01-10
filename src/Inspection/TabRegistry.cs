@@ -143,7 +143,7 @@ namespace RimWorldAccess
             { "ITab_Fishing", TabHandlerType.BasicInspectString },
             { "ITab_Book", TabHandlerType.BasicInspectString },
             { "ITab_PenBase", TabHandlerType.BasicInspectString },
-            { "ITab_PenAnimals", TabHandlerType.BasicInspectString },
+            { "ITab_PenAnimals", TabHandlerType.Action },
             { "ITab_PenFood", TabHandlerType.BasicInspectString },
         };
 
@@ -309,6 +309,7 @@ namespace RimWorldAccess
                 case "ITab_Pawn_Prisoner": return "Prisoner";
                 case "ITab_Bills": return "Bills";
                 case "ITab_Storage": return "Storage";
+                case "ITab_PenAnimals": return "Pen Animals";
                 default: return GetCategoryNameForTab(tab);
             }
         }

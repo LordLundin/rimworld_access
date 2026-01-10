@@ -461,6 +461,7 @@ namespace RimWorldAccess
                        (category == "Storage" && building is IStoreSettingsParent) ||
                        (category == "Shells" && building is Building_TurretGun) ||
                        (category == "Plant Selection" && building is IPlantToGrowSettable) ||
+                       (category == "Pen Animals" && building.TryGetComp<CompAnimalPenMarker>() != null) ||
                        BuildingComponentsHelper.GetDiscoverableComponents(building).Any(c => c.CategoryName == category && !c.IsReadOnly);
             }
 
@@ -576,6 +577,14 @@ namespace RimWorldAccess
             else if (category == "Plant Selection" && building is IPlantToGrowSettable plantGrower)
             {
                 PlantSelectionMenuState.Open(plantGrower);
+            }
+            else if (category == "Pen Animals")
+            {
+                var penMarker = building.TryGetComp<CompAnimalPenMarker>();
+                if (penMarker != null)
+                {
+                    ThingFilterMenuState.Open(penMarker.AnimalFilter, AnimalPenUtility.GetFixedAnimalFilter(), "Pen Animals");
+                }
             }
             else
             {
