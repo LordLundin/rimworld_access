@@ -76,7 +76,6 @@ namespace RimWorldAccess
             currentDialog = null;
             configs.Clear();
             typeahead.ClearSearch();
-            // Sound handled by dialog close (doCloseSound: true)
             TolkHelper.Speak("Auto-slaughter closed");
         }
 
@@ -159,22 +158,23 @@ namespace RimWorldAccess
             var config = configs[currentRowIndex];
             var column = (Column)currentColumnIndex;
 
+            // Increment: unlimited (-1) -> 0 -> 1 -> 2 -> ...
             switch (column)
             {
                 case Column.MaxTotal:
-                    config.maxTotal = config.maxTotal == -1 ? GetCurrentCount(config) : config.maxTotal + 1;
+                    config.maxTotal = config.maxTotal == -1 ? 0 : config.maxTotal + 1;
                     break;
                 case Column.MaxMales:
-                    config.maxMales = config.maxMales == -1 ? GetCurrentMaleCount(config) : config.maxMales + 1;
+                    config.maxMales = config.maxMales == -1 ? 0 : config.maxMales + 1;
                     break;
                 case Column.MaxMalesYoung:
-                    config.maxMalesYoung = config.maxMalesYoung == -1 ? GetCurrentMaleYoungCount(config) : config.maxMalesYoung + 1;
+                    config.maxMalesYoung = config.maxMalesYoung == -1 ? 0 : config.maxMalesYoung + 1;
                     break;
                 case Column.MaxFemales:
-                    config.maxFemales = config.maxFemales == -1 ? GetCurrentFemaleCount(config) : config.maxFemales + 1;
+                    config.maxFemales = config.maxFemales == -1 ? 0 : config.maxFemales + 1;
                     break;
                 case Column.MaxFemalesYoung:
-                    config.maxFemalesYoung = config.maxFemalesYoung == -1 ? GetCurrentFemaleYoungCount(config) : config.maxFemalesYoung + 1;
+                    config.maxFemalesYoung = config.maxFemalesYoung == -1 ? 0 : config.maxFemalesYoung + 1;
                     break;
                 case Column.AllowPregnant:
                 case Column.AllowBonded:
@@ -194,23 +194,23 @@ namespace RimWorldAccess
             var config = configs[currentRowIndex];
             var column = (Column)currentColumnIndex;
 
-            // Decrement, or go to unlimited (-1) when at 0
+            // Decrement: ... -> 2 -> 1 -> 0 -> unlimited (-1). At unlimited, do nothing.
             switch (column)
             {
                 case Column.MaxTotal:
-                    config.maxTotal = config.maxTotal == 0 ? -1 : (config.maxTotal > 0 ? config.maxTotal - 1 : config.maxTotal);
+                    if (config.maxTotal >= 0) config.maxTotal = config.maxTotal == 0 ? -1 : config.maxTotal - 1;
                     break;
                 case Column.MaxMales:
-                    config.maxMales = config.maxMales == 0 ? -1 : (config.maxMales > 0 ? config.maxMales - 1 : config.maxMales);
+                    if (config.maxMales >= 0) config.maxMales = config.maxMales == 0 ? -1 : config.maxMales - 1;
                     break;
                 case Column.MaxMalesYoung:
-                    config.maxMalesYoung = config.maxMalesYoung == 0 ? -1 : (config.maxMalesYoung > 0 ? config.maxMalesYoung - 1 : config.maxMalesYoung);
+                    if (config.maxMalesYoung >= 0) config.maxMalesYoung = config.maxMalesYoung == 0 ? -1 : config.maxMalesYoung - 1;
                     break;
                 case Column.MaxFemales:
-                    config.maxFemales = config.maxFemales == 0 ? -1 : (config.maxFemales > 0 ? config.maxFemales - 1 : config.maxFemales);
+                    if (config.maxFemales >= 0) config.maxFemales = config.maxFemales == 0 ? -1 : config.maxFemales - 1;
                     break;
                 case Column.MaxFemalesYoung:
-                    config.maxFemalesYoung = config.maxFemalesYoung == 0 ? -1 : (config.maxFemalesYoung > 0 ? config.maxFemalesYoung - 1 : config.maxFemalesYoung);
+                    if (config.maxFemalesYoung >= 0) config.maxFemalesYoung = config.maxFemalesYoung == 0 ? -1 : config.maxFemalesYoung - 1;
                     break;
                 case Column.AllowPregnant:
                 case Column.AllowBonded:
@@ -517,7 +517,6 @@ namespace RimWorldAccess
                 if (typeahead.HasActiveSearch)
                 {
                     typeahead.ClearSearchAndAnnounce();
-                    // Don't announce cell - ClearSearchAndAnnounce already speaks "Search cleared"
                 }
                 else
                 {
@@ -629,6 +628,12 @@ namespace RimWorldAccess
                     ToggleBoolean();
                     return true;
                 }
+            }
+
+            // Tab - consume to prevent repeated announcements
+            if (key == KeyCode.Tab)
+            {
+                return true;
             }
 
             // Typeahead - letter keys
