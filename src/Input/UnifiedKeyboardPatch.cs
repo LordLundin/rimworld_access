@@ -2704,6 +2704,7 @@ namespace RimWorldAccess
                 // 2. No windows are preventing camera motion (means a dialog is open)
                 // 3. Not in zone creation mode
                 // 4. No accessibility menus are active (they handle their own Escape)
+                // 5. Not in targeting mode (let RimWorld handle Escape to cancel targeting)
                 if (Current.ProgramState == ProgramState.Playing &&
                     Find.CurrentMap != null &&
                     (Find.WindowStack == null || !Find.WindowStack.WindowsPreventCameraMotion) &&
@@ -2711,7 +2712,8 @@ namespace RimWorldAccess
                     !KeyboardHelper.IsAnyAccessibilityMenuActive() &&
                     !QuestLocationsBrowserState.IsActive &&
                     !SettlementBrowserState.IsActive &&
-                    !CaravanStatsState.IsActive)
+                    !CaravanStatsState.IsActive &&
+                    (Find.Targeter == null || !Find.Targeter.IsTargeting))
                 {
                     // Prevent the default escape behavior (opening game's pause menu)
                     Event.current.Use();
